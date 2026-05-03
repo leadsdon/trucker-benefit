@@ -1,0 +1,3235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Security Assessment for Truck Drivers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!--
+      ════════════════════════════════════════════════════════════════════
+      CONFIG: paste your real IDs into the placeholders below.
+      Each script no-ops until configured, so the page works in dev.
+      ════════════════════════════════════════════════════════════════════
+    -->
+    <script>
+        // Replace these once you've created the accounts. Until then, no events fire.
+        window.TB_CONFIG = {
+            CLARITY_PROJECT_ID: "YOUR_CLARITY_PROJECT_ID",      // clarity.microsoft.com
+            META_PIXEL_ID: "1589839658777765",                  // business.facebook.com → Events Manager
+            GA4_MEASUREMENT_ID: "G-XXXXXXXXXX",                 // analytics.google.com (GA4)
+            GOOGLE_ADS_ID: "AW-XXXXXXXXXX",                     // ads.google.com (only if running Google Ads)
+            GOOGLE_ADS_LEAD_LABEL: "XXXXXXXXXX",                // conversion label for Lead
+            GOOGLE_ADS_CALL_LABEL: "XXXXXXXXXX",                // conversion label for Phone Call
+            TRUSTEDFORM_ENABLED: true                           // free script; cert retrieval is paid
+        };
+        const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
+    </script>
+
+    <!-- Microsoft Clarity (heatmaps, recordings) -->
+    <script>
+        (function(c,l,a,r,i,t,y){
+            if (!_isConfigured(i)) return;
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", window.TB_CONFIG.CLARITY_PROJECT_ID);
+    </script>
+
+    <!-- Meta Pixel — fires standard events; pair with Conversions API server-side later -->
+    <script>
+        !function(f,b,e,v,n,t,s){
+            if (!_isConfigured(window.TB_CONFIG.META_PIXEL_ID)) return;
+            if(f.fbq)return;n=f.fbq=function(){n.callMethod? n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];
+            t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s);
+        }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        if (window.fbq) { fbq('init', window.TB_CONFIG.META_PIXEL_ID); fbq('track', 'PageView'); }
+    </script>
+    <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?ev=PageView&noscript=1"/></noscript>
+
+    <!-- Google Analytics 4 + Google Ads conversion tracking -->
+    <script>
+        (function() {
+            const ga = window.TB_CONFIG.GA4_MEASUREMENT_ID;
+            const ads = window.TB_CONFIG.GOOGLE_ADS_ID;
+            if (!_isConfigured(ga) && !_isConfigured(ads)) return;
+            const id = _isConfigured(ga) ? ga : ads;
+            const s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function(){ dataLayer.push(arguments); };
+            gtag('js', new Date());
+            if (_isConfigured(ga))  gtag('config', ga);
+            if (_isConfigured(ads)) gtag('config', ads);
+        })();
+    </script>
+
+    <!-- TrustedForm — captures independent proof of TCPA consent (free script; paid cert retrieval) -->
+    <script>
+        (function() {
+            if (!window.TB_CONFIG.TRUSTEDFORM_ENABLED) return;
+            const tf = document.createElement('script');
+            tf.type = 'text/javascript';
+            tf.async = true;
+            tf.src = (location.protocol === 'https:' ? 'https' : 'http') +
+                '://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl&l=' +
+                Date.now() + Math.random();
+            const s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(tf, s);
+        })();
+    </script>
+    <noscript><img src="https://api.trustedform.com/ns.gif" alt=""></noscript>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --dark: #1A1A2E;
+            --light: #F5F5F5;
+            --accent: #FFB800;
+            --text: #2D2D2D;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: #1A1A2E;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #004E89 0%, #1A1A2E 100%);
+            padding: 60px 20px 40px;
+            text-align: center;
+        }
+
+        .pre-head {
+            color: var(--accent);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 56px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: #fff;
+            max-width: 1100px;
+            margin-left: auto;
+            margin-right: auto;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 .highlight {
+            color: var(--accent);
+        }
+
+        .sub-headline {
+            font-size: 22px;
+            line-height: 1.5;
+            max-width: 900px;
+            margin: 0 auto 40px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        /* Quiz Container - Embedded in Hero */
+        .quiz-embed {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 50px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-embed::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #E0E0E0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.4s ease;
+            border-radius: 10px;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--secondary);
+            opacity: 0.8;
+        }
+
+        .quiz-start h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            color: var(--dark);
+            margin-bottom: 15px;
+            line-height: 1.1;
+        }
+
+        .quiz-subtitle {
+            font-size: 17px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .question {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .question.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .question-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .question-subtext {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        .skip-button {
+            display: block;
+            margin: 12px auto 0;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: underline;
+            cursor: pointer;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .skip-button:hover {
+            color: var(--primary);
+        }
+
+        .phone-confirm-display {
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            letter-spacing: 2px;
+            color: var(--dark);
+            background: var(--light);
+            border: 3px solid var(--primary);
+            border-radius: 12px;
+            padding: 22px 16px;
+            margin: 8px 0 22px;
+        }
+
+        .tcpa-consent {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.55;
+            text-align: left;
+            background: #FAFAFA;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-top: 18px;
+        }
+
+        .tcpa-consent a {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        /* Cookie consent banner */
+        .cookie-banner {
+            position: fixed;
+            bottom: 90px;
+            left: 16px;
+            right: 16px;
+            max-width: 520px;
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 9998;
+            background: #1A1F2D;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-shadow: 0 18px 50px rgba(0,0,0,0.4);
+            display: none;
+        }
+
+        .cookie-banner.show { display: block; }
+
+        .cookie-banner-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            color: #FFB800;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .cookie-banner-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 12px;
+        }
+
+        .cookie-banner-text a {
+            color: #FFB800;
+            text-decoration: underline;
+        }
+
+        .cookie-banner-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .cookie-banner-actions button {
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-family: 'Archivo', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .cookie-btn-decline { background: transparent; color: #ccc; }
+        .cookie-btn-accept { background: #FFB800; color: #1A1F2D; border-color: #FFB800; }
+
+        body.quiz-active .cookie-banner { display: none !important; }
+
+        /* Footer */
+        .site-footer {
+            max-width: 1100px;
+            margin: 30px auto 0;
+            padding: 30px 20px 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+        }
+
+        .site-footer a {
+            color: rgba(255,255,255,0.75);
+            text-decoration: underline;
+            margin: 0 8px;
+        }
+
+        .site-footer-disclaimer {
+            margin-top: 14px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
+            max-width: 880px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        body.quiz-active .site-footer { display: none !important; }
+        body.admin-open .site-footer { display: none !important; }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: var(--light);
+            border: 3px solid transparent;
+            padding: 18px 22px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text);
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 53, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option:hover::before {
+            left: 100%;
+        }
+
+        .option:hover {
+            border-color: var(--primary);
+            background: white;
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px var(--shadow);
+        }
+
+        .option.selected {
+            border-color: var(--primary);
+            background: rgba(255, 107, 53, 0.1);
+            font-weight: 600;
+        }
+
+        /* Text Input Styles */
+        .text-input-container {
+            margin-top: 20px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 18px 22px;
+            font-size: 17px;
+            border: 3px solid #E0E0E0;
+            border-radius: 12px;
+            font-family: 'Archivo', sans-serif;
+            font-weight: 500;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.2);
+        }
+
+        .text-input::placeholder {
+            color: #999;
+        }
+
+        .continue-button, .start-button {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), #FF8555);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .continue-button:hover, .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.3);
+        }
+
+        .quiz-security {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #999;
+            font-weight: 500;
+        }
+
+        /* Content Sections */
+        .content-section {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px;
+        }
+
+        .content-section h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 48px;
+            color: var(--accent);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .content-section h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            color: #fff;
+            margin: 40px 0 20px;
+            letter-spacing: 1px;
+        }
+
+        .content-section p {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .content-section ul {
+            margin: 20px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .content-section ul li {
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 12px;
+            padding-left: 30px;
+            position: relative;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .content-section ul li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 107, 53, 0.1);
+            border-left: 5px solid var(--primary);
+            padding: 25px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+
+        .stat-box strong {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        .highlight-box {
+            background: rgba(0, 78, 137, 0.2);
+            border: 2px dashed var(--accent);
+            padding: 30px;
+            margin: 30px 0;
+            border-radius: 12px;
+        }
+
+        .highlight-box h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, var(--primary), #FF8555);
+            padding: 60px 20px;
+            text-align: center;
+            margin: 80px 0;
+        }
+
+        .cta-section h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 48px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 22px 50px;
+            background: var(--dark);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: space-around;
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+        }
+
+        .trust-badge {
+            text-align: center;
+        }
+
+        .trust-badge-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .trust-badge-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .results-page {
+            display: none;
+        }
+
+        .results-page.active {
+            display: block;
+        }
+
+        /* While the quiz is active, the rest of the page is hidden.
+           This stays on through loading, IUL match, and call-now.
+           A separate `quiz-locked` class adds the scroll trap during questions only. */
+        body.quiz-active .pre-head,
+        body.quiz-active .hero h1,
+        body.quiz-active .sub-headline,
+        body.quiz-active #quizIntroCopy,
+        body.quiz-active #quizTrustLine,
+        body.quiz-active .fear-section,
+        body.quiz-active .content-section,
+        body.quiz-active .cta-section,
+        body.quiz-active .trust-badges,
+        body.quiz-active .sticky-cta {
+            display: none !important;
+        }
+
+        body.quiz-active .hero {
+            min-height: 100vh;
+            padding-top: 14px;
+        }
+
+        body.quiz-locked {
+            overflow: hidden;
+        }
+
+        body.quiz-locked .hero {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            background: var(--dark);
+            padding: 14px 16px 40px;
+        }
+
+        body.quiz-active .quiz-embed {
+            margin: 0 auto;
+        }
+
+        /* Fear testimonials section */
+        .fear-section {
+            max-width: 1100px;
+            margin: 60px auto 40px;
+            padding: 0 20px;
+        }
+
+        .fear-eyebrow {
+            display: inline-block;
+            background: rgba(255, 71, 71, 0.15);
+            color: #FF6B6B;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+        }
+
+        .fear-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .fear-header h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 52px;
+            color: #fff;
+            line-height: 1.05;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+
+        .fear-header p {
+            font-size: 18px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.85);
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .fear-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 22px;
+            margin-bottom: 50px;
+        }
+
+        .fear-card {
+            background: rgba(255, 71, 71, 0.06);
+            border: 1px solid rgba(255, 71, 71, 0.2);
+            border-left: 4px solid #FF4747;
+            border-radius: 12px;
+            padding: 28px;
+        }
+
+        .fear-card-tag {
+            font-family: 'Archivo', sans-serif;
+            font-size: 11px;
+            font-weight: 800;
+            color: #FF6B6B;
+            letter-spacing: 2.5px;
+            margin-bottom: 12px;
+        }
+
+        .fear-card-headline {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            color: #fff;
+            line-height: 1.15;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+        }
+
+        .fear-card-quote {
+            font-size: 15px;
+            line-height: 1.65;
+            color: rgba(255, 255, 255, 0.88);
+            font-style: italic;
+            margin-bottom: 16px;
+        }
+
+        .fear-card-attr {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 12px;
+        }
+
+        .fear-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 50px;
+        }
+
+        .fear-stat {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 22px 18px;
+            text-align: center;
+        }
+
+        .fear-stat-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 48px;
+            color: #FF6B6B;
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .fear-stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+        }
+
+        .fear-cta {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255, 71, 71, 0.12), rgba(255, 107, 53, 0.08));
+            border: 2px dashed #FF4747;
+            border-radius: 14px;
+            padding: 40px 24px;
+        }
+
+        .fear-cta h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            color: #fff;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .fear-cta p {
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.5;
+            margin-bottom: 24px;
+            max-width: 580px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button-fear {
+            display: inline-block;
+            padding: 20px 44px;
+            background: linear-gradient(135deg, #FF4747, #FF6B6B);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            box-shadow: 0 12px 32px rgba(255, 71, 71, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .cta-button-fear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(255, 71, 71, 0.45);
+        }
+
+        .fear-cta-fineprint {
+            margin-top: 14px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .fear-section { margin: 40px auto 20px; }
+            .fear-header h2 { font-size: 34px; }
+            .fear-header p { font-size: 15px; }
+            .fear-grid { grid-template-columns: 1fr; gap: 16px; margin-bottom: 30px; }
+            .fear-card { padding: 22px; }
+            .fear-card-headline { font-size: 20px; }
+            .fear-stats { grid-template-columns: repeat(2, 1fr); margin-bottom: 30px; }
+            .fear-stat-number { font-size: 38px; }
+            .fear-cta { padding: 30px 18px; }
+            .fear-cta h3 { font-size: 28px; }
+            .cta-button-fear { font-size: 20px; padding: 18px 28px; }
+        }
+
+        /* Sticky bottom CTA */
+        body { padding-bottom: 84px; }
+
+        .sticky-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: linear-gradient(135deg, var(--primary), #FF8555);
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            color: #fff;
+        }
+
+        .sticky-cta-text {
+            font-size: 15px;
+            line-height: 1.3;
+            flex: 1;
+        }
+
+        .sticky-cta-text strong {
+            color: var(--accent);
+            margin-right: 4px;
+        }
+
+        .sticky-cta-button {
+            background: var(--dark);
+            color: #fff;
+            border: none;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 17px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            transition: transform 0.2s ease;
+        }
+
+        .sticky-cta-button:hover {
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 768px) {
+            body { padding-bottom: 76px; }
+            .sticky-cta { padding: 12px 14px; gap: 10px; }
+            .sticky-cta-text { font-size: 13px; }
+            .sticky-cta-button { font-size: 14px; padding: 12px 16px; }
+        }
+
+        /* Admin dashboard */
+        body.admin-open { overflow: hidden; }
+        body.admin-open .hero,
+        body.admin-open .fear-section,
+        body.admin-open .content-section,
+        body.admin-open .cta-section,
+        body.admin-open .trust-badges,
+        body.admin-open .sticky-cta { display: none !important; }
+
+        .admin-dashboard {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #0E1119;
+            color: #E8EAF0;
+            font-family: 'Archivo', sans-serif;
+            overflow-y: auto;
+            padding: 28px 28px 60px;
+        }
+
+        .admin-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+        }
+
+        .admin-topbar h1 {
+            font-family: 'Archivo', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .admin-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-session {
+            font-size: 12px;
+            color: #888;
+            font-family: 'SF Mono', Menlo, monospace;
+        }
+
+        .admin-dashboard button {
+            background: #2A3142;
+            color: #fff;
+            border: 1px solid #3A4358;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Archivo', sans-serif;
+            transition: background 0.15s ease;
+        }
+
+        .admin-dashboard button:hover { background: #3A4358; }
+        .admin-dashboard button.admin-danger { background: #4A1F1F; border-color: #6B2C2C; }
+        .admin-dashboard button.admin-danger:hover { background: #5C2828; }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 32px;
+        }
+
+        .admin-stat {
+            background: #1A1F2D;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+
+        .admin-stat-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 36px;
+            color: #FFB800;
+            line-height: 1;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .admin-stat-label {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .admin-dashboard h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin: 28px 0 8px;
+        }
+
+        .admin-note {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 14px;
+            line-height: 1.5;
+        }
+
+        .admin-note code {
+            background: #2A3142;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #FFB800;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1A1F2D;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 24px;
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 12px 14px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .admin-table th {
+            background: #232A3C;
+            color: #B8BFD0;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .admin-table td { color: #D5D9E4; }
+        .admin-table .admin-q-text { color: #B8BFD0; max-width: 380px; }
+        .admin-table .admin-warn { color: #FF6B6B; font-weight: 600; }
+        .admin-table .admin-empty { text-align: center; color: #666; padding: 24px; }
+
+        .admin-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 28px 0 12px;
+        }
+
+        .admin-actions > div { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .admin-link {
+            display: inline-block;
+            color: #FFB800;
+            text-decoration: none;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .admin-link:hover { text-decoration: underline; }
+
+        .admin-topbar h1 code, .admin-session code {
+            font-family: 'SF Mono', Menlo, monospace;
+            background: #2A3142;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #FFB800;
+        }
+
+        .admin-filterbar {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            background: #1A1F2D;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+
+        .admin-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-filter-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .admin-pillgroup {
+            display: flex;
+            gap: 4px;
+            background: #0E1119;
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        .admin-pillgroup button {
+            background: transparent;
+            border: none;
+            color: #999;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .admin-pillgroup button.admin-pill-active {
+            background: #FFB800;
+            color: #1A1F2D;
+        }
+
+        .admin-filter-group select {
+            background: #0E1119;
+            color: #fff;
+            border: 1px solid #3A4358;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 12px;
+            font-family: 'Archivo', sans-serif;
+            cursor: pointer;
+        }
+
+        .admin-live {
+            font-size: 11px;
+            color: #2BC76A;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            animation: livePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+            50% { opacity: 0.5; }
+        }
+
+        .admin-stat-sub {
+            font-size: 11px;
+            color: #FFB800;
+            font-weight: 600;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .admin-stat-hi {
+            border-color: rgba(255, 184, 0, 0.4);
+            background: linear-gradient(135deg, #1A1F2D 0%, #2A2418 100%);
+        }
+
+        .admin-table .admin-caution { color: #FFB800; font-weight: 600; }
+        .admin-table .admin-good { color: #2BC76A; font-weight: 700; }
+
+        .admin-pill {
+            display: inline-block;
+            background: #2A3142;
+            color: #B8BFD0;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .admin-pill-complete { background: #1A4D2E; color: #6FFFAA; }
+        .admin-pill-partial { background: #4D3A1A; color: #FFC56F; }
+
+        .admin-lead-row { cursor: pointer; transition: background 0.15s ease; }
+        .admin-lead-row:hover { background: #232A3C; }
+        .admin-lead-row-active { background: #2A3142; }
+
+        .admin-lead-detail td {
+            background: #0E1119;
+            padding: 18px;
+            border-bottom: 2px solid #FFB800;
+        }
+
+        .admin-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .admin-detail-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #FFB800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,184,0,0.2);
+            padding-bottom: 6px;
+        }
+
+        .admin-detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 4px 0;
+            font-size: 12px;
+        }
+
+        .admin-detail-row span {
+            color: #888;
+            font-weight: 500;
+        }
+
+        .admin-detail-row code {
+            color: #E8EAF0;
+            background: #1A1F2D;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'SF Mono', Menlo, monospace;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .admin-dashboard { padding: 18px 14px 40px; }
+            .admin-topbar h1 { font-size: 20px; }
+            .admin-grid { grid-template-columns: repeat(2, 1fr); }
+            .admin-stat-num { font-size: 28px; }
+            .admin-table { font-size: 12px; }
+            .admin-table th, .admin-table td { padding: 8px 10px; }
+            .admin-filterbar { padding: 12px; gap: 12px; }
+            .admin-filter-group { flex-wrap: wrap; }
+            .admin-detail-grid { grid-template-columns: 1fr; gap: 18px; }
+        }
+
+        /* Loading screen */
+        .loading-screen {
+            text-align: center;
+            padding: 10px 0 20px;
+        }
+
+        .spinner {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 24px;
+            border: 5px solid rgba(255, 107, 53, 0.15);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 30px;
+            color: var(--dark);
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+            line-height: 1.15;
+        }
+
+        .loading-name {
+            color: var(--primary);
+        }
+
+        .loading-steps {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin: 22px 0 28px;
+        }
+
+        .loading-step {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+            opacity: 0.4;
+            transition: all 0.4s ease;
+        }
+
+        .loading-step.active {
+            color: var(--secondary);
+            opacity: 1;
+        }
+
+        .testimonial-rotator {
+            min-height: 130px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .testimonial {
+            background: rgba(255, 184, 0, 0.12);
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            padding: 18px 22px;
+            max-width: 560px;
+            text-align: left;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .testimonial-quote {
+            font-size: 16px;
+            color: var(--dark);
+            line-height: 1.5;
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+
+        .testimonial-attr {
+            font-size: 13px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* IUL reveal */
+        .iul-reveal {
+            text-align: center;
+            padding: 6px 0 10px;
+        }
+
+        .iul-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--dark);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+
+        .iul-headline {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 44px;
+            color: var(--dark);
+            line-height: 1.05;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .iul-tagline {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .iul-benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            margin: 0 auto 28px;
+            max-width: 600px;
+        }
+
+        .iul-benefit {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .iul-benefit strong {
+            color: var(--dark);
+        }
+
+        .iul-cta {
+            max-width: 480px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .iul-call-now {
+            max-width: 520px;
+            margin: 0 auto 8px;
+        }
+
+        .iul-call-sub {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            max-width: 460px;
+            margin: 0 auto 18px;
+        }
+
+        .iul-secondary-cta {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            font-family: 'Archivo', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+        }
+
+        .iul-secondary-cta:hover {
+            color: var(--primary);
+        }
+
+        .iul-disclaimer {
+            font-size: 13px;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        /* Call now screen */
+        .call-now-screen {
+            text-align: center;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        .call-now-pulse {
+            display: none;
+        }
+
+        .call-now-badge {
+            display: inline-block;
+            background: rgba(255, 107, 53, 0.12);
+            color: var(--primary);
+            font-family: 'Archivo', sans-serif;
+            font-size: 12px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+        }
+
+        .call-now-headline {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            color: var(--dark);
+            line-height: 1.05;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .call-now-sub {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+            max-width: 540px;
+            margin: 0 auto 26px;
+        }
+
+        .call-now-button {
+            display: block;
+            max-width: 520px;
+            margin: 0 auto 22px;
+            padding: 24px 20px;
+            background: linear-gradient(135deg, #1FAE57, #2BC76A);
+            color: #fff;
+            border-radius: 14px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 1.5px;
+            text-decoration: none;
+            box-shadow: 0 14px 35px rgba(31, 174, 87, 0.35);
+            animation: callPulse 1.6s ease-in-out infinite;
+        }
+
+        .call-now-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 45px rgba(31, 174, 87, 0.45);
+        }
+
+        @keyframes callPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .call-now-trust {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+            margin-bottom: 18px;
+        }
+
+        .call-now-fineprint {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        /* Share-with-a-friend card on the call-now screen */
+        .share-card {
+            margin: 36px auto 0;
+            max-width: 540px;
+            background: linear-gradient(135deg, rgba(0, 78, 137, 0.08), rgba(255, 184, 0, 0.06));
+            border: 2px dashed var(--secondary);
+            border-radius: 14px;
+            padding: 28px 24px;
+            text-align: center;
+        }
+
+        .share-card-icon {
+            font-size: 36px;
+            margin-bottom: 6px;
+        }
+
+        .share-card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            color: var(--dark);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .share-card-sub {
+            font-size: 15px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .share-card-button {
+            background: linear-gradient(135deg, var(--secondary), #0066B3);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 26px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 18px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 8px 22px rgba(0, 78, 137, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .share-card-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 78, 137, 0.35);
+        }
+
+        .share-card-fineprint {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        @media (max-width: 768px) {
+            .share-card { padding: 22px 18px; margin-top: 28px; }
+            .share-card-title { font-size: 24px; }
+            .share-card-button { font-size: 16px; padding: 14px 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .iul-headline { font-size: 34px; }
+            .call-now-headline { font-size: 32px; }
+            .call-now-button { font-size: 22px; padding: 20px 14px; }
+            .loading-title { font-size: 24px; }
+        }
+
+        @media (max-width: 768px) {
+            .hero {
+                padding: 20px 16px 30px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .hero .pre-head { order: 1; font-size: 12px; letter-spacing: 2px; margin-bottom: 8px; }
+            .hero h1       { order: 2; font-size: 26px; line-height: 1.15; margin-bottom: 10px; }
+            .hero .sub-headline { order: 3; font-size: 14px; line-height: 1.4; margin: 0 auto 14px; }
+            .hero .quiz-embed   { order: 4; padding: 24px 18px; }
+            .hero #quizTrustLine { order: 5; margin-top: 12px; }
+            .hero #quizIntroCopy { order: 6; margin: 24px auto 10px; }
+
+            .question-text {
+                font-size: 20px;
+            }
+
+            .content-section h2 {
+                font-size: 36px;
+            }
+
+            .trust-badges {
+                flex-direction: column;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section with Embedded Quiz -->
+    <section class="hero">
+        <div class="pre-head">ATTENTION TRUCK DRIVERS:</div>
+        <h1>The Hidden Financial Crisis Destroying Trucker Families <span class="highlight">(And the ONE Solution 93% of Drivers Don't Know Exists)</span></h1>
+        <p class="sub-headline">Take This 60-Second Assessment to Discover Your Biggest Financial Vulnerability—And How to Protect Your Family for Less Than the Cost of Your Daily Coffee</p>
+
+        <!-- Quiz Introduction Copy -->
+        <div id="quizIntroCopy" style="max-width: 750px; margin: 40px auto 30px; text-align: center;">
+            <div style="background: rgba(255, 184, 0, 0.15); border-left: 5px solid #FFB800; padding: 25px; border-radius: 10px; margin-bottom: 25px;">
+                <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #FFB800; margin-bottom: 12px; letter-spacing: 1px;">⏱️ ONLY 60 SECONDS</h3>
+                <p style="font-size: 17px; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0;">Answer 13 quick questions and we'll reveal your personalized financial protection plan—plus show you how to get <strong style="color: #FFB800;">$100,000-$500,000 in coverage</strong> for less than you spend on coffee.</p>
+            </div>
+
+            <div style="display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7); margin-bottom: 5px;">✓ FREE ASSESSMENT</div>
+                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.6);">No Cost, No Obligation</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">✓ INSTANT RESULTS</div>
+                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.6);">Get Your Plan Immediately</div>
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <div style="font-size: 14px; color: rgba(255, 255, 255, 0.7);">✓ 100% CONFIDENTIAL</div>
+                    <div style="font-size: 13px; color: rgba(255, 255, 255, 0.6);">Your Info is Protected</div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 107, 53, 0.1); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <p style="font-size: 15px; color: rgba(255, 255, 255, 0.9); margin: 0; font-weight: 600;">
+                    🔥 <strong style="color: #FF6B35;">1,247 truckers</strong> took this assessment this month — Join them now!
+                </p>
+            </div>
+        </div>
+
+        <!-- QUIZ EMBEDDED HERE -->
+        <div class="quiz-embed" id="quizEmbed">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="phase-indicator" id="phaseIndicator">VISION PHASE</div>
+
+            <!-- Quiz Questions -->
+            <div id="questionsContainer">
+                <!-- Questions will be inserted here dynamically -->
+            </div>
+
+            <!-- Results Page -->
+            <div class="results-page" id="resultsPage">
+                <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--dark); margin-bottom: 20px;">Your Assessment Is Complete!</h2>
+                <p style="color: #666; font-size: 18px; margin-bottom: 30px;">Based on your answers, here's what we discovered about your financial situation...</p>
+                <p style="color: #666; font-size: 16px; margin-top: 20px;">📊 Analyzing your responses...</p>
+            </div>
+        </div>
+
+        <div id="quizTrustLine" style="text-align: center; margin-top: 20px; padding: 0 20px;">
+            <p style="font-size: 13px; color: rgba(255, 255, 255, 0.7); margin: 0;">
+                🔒 Your information is 100% secure and will never be shared or sold
+            </p>
+        </div>
+    </section>
+
+    <!-- Fear Testimonials — what happens when truckers go unprotected -->
+    <section class="fear-section" id="fearSection">
+        <div class="fear-header">
+            <div class="fear-eyebrow">⚠️ THE STORIES THEY DON'T TELL YOU</div>
+            <h2>This Is What Happens to Trucker Families Without a Plan</h2>
+            <p>Real scenarios. Real families. Every single one happened because they assumed "it won't happen to me." Don't let yours be next.</p>
+        </div>
+
+        <div class="fear-grid">
+            <article class="fear-card">
+                <div class="fear-card-tag">CANCER AT 51</div>
+                <h3 class="fear-card-headline">"He fought for 14 months. Insurance paid $0 until he died."</h3>
+                <p class="fear-card-quote">After 22 years on the road, my husband was diagnosed with stage 4 colon cancer. We had basic life insurance — but it only paid when he passed. We lost the house, both vehicles, and the kids' college fund in 8 months while he was still alive. He couldn't work. The bills kept coming. By the time the death benefit hit, we were already wiped out.</p>
+                <div class="fear-card-attr">— Diane K., widow of OTR driver, Tennessee</div>
+            </article>
+
+            <article class="fear-card">
+                <div class="fear-card-tag">HEART ATTACK ON I-80</div>
+                <h3 class="fear-card-headline">"He survived. Our finances didn't."</h3>
+                <p class="fear-card-quote">My husband had a massive heart attack at 47 — pulled over on the shoulder of I-80. He lived. But the doctors said no more driving. Ever. We had term life only. No living benefits. He's now 49, can't work, and we're $87,000 in medical debt with the mortgage 3 months behind. The truck is gone. The savings is gone. He's alive — and we're drowning.</p>
+                <div class="fear-card-attr">— Sandra M., wife of regional driver, Indiana</div>
+            </article>
+
+            <article class="fear-card">
+                <div class="fear-card-tag">DISABLED AT 44</div>
+                <h3 class="fear-card-headline">"From middle-class to food stamps in 18 months."</h3>
+                <p class="fear-card-quote">My dad was rear-ended on a snowy stretch of I-70 in February 2024. Spinal injury. He's alive but he'll never walk normally, let alone drive a rig again. Settlement covered the truck. Nothing for him. Mom went back to work at 58. They sold the house in November. He keeps apologizing — like it's his fault he didn't have the right coverage.</p>
+                <div class="fear-card-attr">— Tyler R., son of owner-operator, Missouri</div>
+            </article>
+
+            <article class="fear-card">
+                <div class="fear-card-tag">STROKE AT 53</div>
+                <h3 class="fear-card-headline">"30 years of work. Wiped out in 11 months."</h3>
+                <p class="fear-card-quote">He'd been driving since he was 22. Never missed a payment, never had an accident. Stroke hit on a Tuesday morning in the truck stop parking lot. Long-term care now costs us $9,400/month. The 401(k) is gone. The house is in foreclosure. Our pastor is helping with groceries. And every doctor we talk to says the same thing — "if only you'd had living benefits."</p>
+                <div class="fear-card-attr">— Linda P., wife of owner-operator, Ohio</div>
+            </article>
+        </div>
+
+        <div class="fear-stats">
+            <div class="fear-stat">
+                <div class="fear-stat-number">74%</div>
+                <div class="fear-stat-label">of truckers have ZERO living-benefits coverage</div>
+            </div>
+            <div class="fear-stat">
+                <div class="fear-stat-number">3×</div>
+                <div class="fear-stat-label">more likely to suffer a heart attack than the average worker</div>
+            </div>
+            <div class="fear-stat">
+                <div class="fear-stat-number">$87K</div>
+                <div class="fear-stat-label">average medical debt for trucker families after a critical illness</div>
+            </div>
+            <div class="fear-stat">
+                <div class="fear-stat-number">8 mo.</div>
+                <div class="fear-stat-label">average time before an unprotected family loses the house</div>
+            </div>
+        </div>
+
+        <div class="fear-cta">
+            <h3>Don't gamble with your family's future.</h3>
+            <p>Find out exactly what coverage you qualify for — and what it costs — in 60 seconds.</p>
+            <button class="cta-button-fear" onclick="scrollToQuiz()">START MY FREE ASSESSMENT →</button>
+            <div class="fear-cta-fineprint">No cost · No obligation · 60 seconds</div>
+        </div>
+    </section>
+
+    <!-- Results Content Section -->
+    <section class="content-section" id="resultsContent" style="display: none;">
+        <h2>Here's What Your Answers Reveal...</h2>
+        <p>You're not alone. Thousands of truckers are facing the same challenges.</p>
+
+        <h3>You're Not Alone In This</h3>
+        <p>Based on your answers, you're juggling <strong style="color: var(--accent);">family responsibilities, rising costs, and the daily risks of the road</strong>—all while trying to build something secure for the people you love.</p>
+        <p>Here's the hard truth: <strong style="color: var(--accent);">74% of truckers have NO financial safety net</strong> if something happens. You're working harder than ever, but the system isn't designed to protect drivers like you.</p>
+
+        <div class="stat-box">
+            <strong>THE BRUTAL REALITY:</strong><br><br>
+            • 4,600+ truck drivers die in accidents every year<br>
+            • 182,000+ suffer serious injuries annually<br>
+            • Average trucker is 3X more likely to have a heart attack<br>
+            • 74% have ZERO financial protection
+        </div>
+
+        <h3>Why Everything You've Tried Has Failed</h3>
+        <p>It's not your fault. The problem isn't your work ethic or your planning.</p>
+
+        <div class="highlight-box">
+            <h4>The REAL Problem: The "One-Dimensional Coverage Gap"</h4>
+            <p>Traditional insurance only pays when you DIE. But what about when you're ALIVE and can't work? Heart attack at 47. Cancer diagnosis. Serious accident that leaves you disabled.</p>
+            <p style="margin-top: 15px;"><strong style="color: var(--accent);">That's when your family needs money the MOST</strong>—but traditional policies leave you with NOTHING.</p>
+        </div>
+
+        <p>You're paying for protection that only works in ONE scenario (death), while ignoring the FIVE other scenarios that are statistically more likely to destroy your finances:</p>
+        <ul>
+            <li><strong>Critical Illness</strong> (heart attack, stroke, cancer)</li>
+            <li><strong>Chronic Illness</strong> (can't work for 90+ days)</li>
+            <li><strong>Critical Injury</strong> (accident leaves you disabled)</li>
+            <li><strong>Terminal Illness</strong> (given less than 12 months)</li>
+            <li><strong>Long-term care needs</strong> (can't perform basic activities)</li>
+        </ul>
+
+        <h3>The Solution: "Living Benefits" Coverage</h3>
+        <p>There's a NEW type of coverage that changes everything: <strong style="color: var(--accent);">Life Insurance with Living Benefits</strong>.</p>
+
+        <div class="highlight-box">
+            <h4>Here's How It Works:</h4>
+            <p>Instead of ONLY paying when you die, this policy pays you while you're ALIVE if you face any of the 6 major financial catastrophes listed above.</p>
+            <p style="margin-top: 15px;"><strong style="color: var(--accent);">Same cost. Same coverage. But you can actually USE it when you need it most.</strong></p>
+        </div>
+
+        <div class="stat-box">
+            <strong>REAL EXAMPLE:</strong><br><br>
+            Mike, 43, CDL driver from Ohio. Diagnosed with cancer. His Living Benefits policy paid him <strong style="color: var(--accent);">$150,000 IMMEDIATELY</strong>—while he was alive and fighting. That money covered treatment, bills, and kept his family afloat while he couldn't work.<br><br>
+            With traditional insurance? He would have gotten <strong style="color: var(--accent);">$0</strong> until he died.
+        </div>
+
+        <p><strong style="color: var(--accent);">The best part?</strong> It costs THE SAME as regular life insurance. You're not paying more—you're just getting a policy that actually WORKS for drivers like you.</p>
+
+        <h3>Your Next Step (No Cost, No Obligation)</h3>
+        <p>We work with <strong style="color: var(--accent);">60+ A-rated carriers</strong> to find you the BEST Living Benefits policy for your specific situation—age, health, budget, and family needs.</p>
+
+        <p>On your free consultation call, we'll:</p>
+        <ul>
+            <li>Show you EXACTLY how much coverage you qualify for</li>
+            <li>Compare pricing from multiple top-rated carriers</li>
+            <li>Explain every benefit in plain English (no insurance jargon)</li>
+            <li>Answer all your questions about how Living Benefits work</li>
+        </ul>
+
+        <p><strong style="color: var(--accent);">Most drivers qualify for $100,000-$500,000 in coverage</strong> for less than the cost of a daily energy drink.</p>
+    </section>
+
+    <!-- Trust Badges -->
+    <div class="trust-badges" id="trustBadges" style="display: none;">
+        <div class="trust-badge">
+            <div class="trust-badge-number">60+</div>
+            <div class="trust-badge-text">A-Rated Carriers</div>
+        </div>
+        <div class="trust-badge">
+            <div class="trust-badge-number">15Min</div>
+            <div class="trust-badge-text">Quick Process</div>
+        </div>
+        <div class="trust-badge">
+            <div class="trust-badge-number">$0</div>
+            <div class="trust-badge-text">Cost to Apply</div>
+        </div>
+    </div>
+
+    <!-- Final CTA -->
+    <section class="cta-section" id="finalCta" style="display: none;">
+        <h2>Ready to Protect Your Family?</h2>
+        <p>Schedule your free consultation now. No cost, no pressure, just honest answers.</p>
+        <a href="#schedule" class="cta-button">SCHEDULE MY FREE CONSULTATION →</a>
+        <p style="margin-top: 25px; font-size: 16px;">⚡ Limited Spots Available This Week - Book Now While Rates Are Low</p>
+    </section>
+
+    <script>
+        // Quiz Data Structure — optimized for low CPL:
+        // Q1 is a 1-tap qualifier (low-effort commitment).
+        // Total trimmed from 18 → 12. Email added. Phone is optional.
+        const questions = [
+            // PHASE 1: QUALIFIER (1-tap micro-commitment)
+            {
+                phase: 1,
+                phaseLabel: "STEP 1 OF 5",
+                number: 1,
+                text: "First — are you a truck driver?",
+                options: [
+                    "Yes, OTR / long-haul",
+                    "Yes, local or regional",
+                    "Yes, owner-operator",
+                    "Not yet, but planning to"
+                ]
+            },
+
+            // PHASE 2: VISION
+            {
+                phase: 2,
+                phaseLabel: "STEP 2 OF 5 · VISION",
+                number: 2,
+                text: "When you think about your family's future, what matters most to you?",
+                options: [
+                    "I want my kids to have opportunities I never had",
+                    "I'm ready to build real wealth, not just survive paycheck to paycheck",
+                    "My dream is leaving a legacy my family can count on",
+                    "I want financial peace of mind, knowing my family is protected no matter what"
+                ]
+            },
+
+            // PHASE 3: REALITY
+            {
+                phase: 3,
+                phaseLabel: "STEP 3 OF 5 · REALITY CHECK",
+                number: 3,
+                text: "On a typical month, how do you handle your finances?",
+                options: [
+                    "I tend to live paycheck to paycheck",
+                    "Sometimes I save, but unexpected costs always eat it up",
+                    "I have a little saved, but not enough for emergencies",
+                    "On a good month I'm ahead, but it's inconsistent"
+                ]
+            },
+            {
+                phase: 3,
+                phaseLabel: "STEP 3 OF 5 · REALITY CHECK",
+                number: 4,
+                text: "How often do rising costs (fuel, food, rent) stress you out?",
+                options: [
+                    "Daily — I'm constantly worried about making ends meet",
+                    "Sometimes — when big bills hit all at once",
+                    "Monthly — when I see how little is left after expenses",
+                    "Occasionally — but I manage to stay afloat"
+                ]
+            },
+
+            // PHASE 4: TRUTH
+            {
+                phase: 4,
+                phaseLabel: "STEP 4 OF 5 · THE TRUTH",
+                number: 5,
+                text: "My biggest financial fear is...",
+                options: [
+                    "Getting sick or injured and losing everything I've worked for",
+                    "Not being there for my family when they need me most",
+                    "Dying and leaving my family in financial ruin",
+                    "Working this hard my whole life and having nothing to show for it"
+                ]
+            },
+            {
+                phase: 4,
+                phaseLabel: "STEP 4 OF 5 · THE TRUTH",
+                number: 6,
+                text: "When it comes to protecting my family, I'm afraid that...",
+                options: [
+                    "I've waited too long and it's too late to get coverage",
+                    "I can't afford the premiums on a trucker's income",
+                    "My health issues will disqualify me from getting approved",
+                    "Even if I get coverage, it won't actually help when I need it"
+                ]
+            },
+
+            // PHASE 5: PRESSURE-RELEASE (last value question before PII)
+            {
+                phase: 4,
+                phaseLabel: "STEP 4 OF 5 · THE TRUTH",
+                number: 7,
+                text: "What I'm really looking for is...",
+                options: [
+                    "Coverage that pays me while I'm ALIVE, not just when I die",
+                    "Protection I can actually afford on my income",
+                    "Straight talk from someone who understands truckers",
+                    "A solution that covers ALL the risks I face on the road"
+                ]
+            },
+
+            // PHASE 6: PII (framed as "where to send your plan")
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
+                number: 8,
+                text: "Where should we send your personalized plan? First, your name:",
+                type: "text",
+                placeholder: "First name",
+                inputType: "name"
+            },
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
+                number: 9,
+                text: "What's your date of birth?",
+                subtext: "We use this to calculate your exact coverage and locked-in rate.",
+                type: "text",
+                placeholder: "MM/DD/YYYY",
+                inputType: "dob"
+            },
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
+                number: 10,
+                text: "What email should we send your plan to?",
+                subtext: "We'll email your personalized financial protection plan here.",
+                type: "text",
+                placeholder: "you@example.com",
+                inputType: "email"
+            },
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
+                number: 11,
+                text: "Best phone number to reach you?",
+                subtext: "We'll call to walk you through your personalized plan — make sure it's correct.",
+                type: "text",
+                placeholder: "(555) 123-4567",
+                inputType: "phone"
+            },
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
+                number: 12,
+                text: "What's your approximate annual income?",
+                options: [
+                    "Under $40,000",
+                    "$40,000 - $60,000",
+                    "$60,000 - $80,000",
+                    "$80,000 - $100,000",
+                    "Over $100,000"
+                ]
+            },
+            {
+                phase: 5,
+                phaseLabel: "FINAL STEP",
+                number: 13,
+                text: "Last one — what's your zip code?",
+                type: "text",
+                placeholder: "Zip code",
+                inputType: "zipcode"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+        let pendingPrefill = null;
+        let userData = {};
+        let quizLocked = false;
+        let quizCompleted = false;
+        let questionStartTs = 0;
+
+        // Replace this with the actual call number you want leads dialing.
+        const CALL_NOW_NUMBER = "(555) 123-4567";
+        const CALL_NOW_TEL = "+15551234567";
+
+        // ─── ANALYTICS + LEADS ─────────────────────────────────────────────
+        // Configure these for production:
+        //  - LEAD_WEBHOOK_URL: paste a Zapier / Make / your-own webhook URL.
+        //    The page will POST every lead and every event there as JSON.
+        //    Leave blank to use only localStorage (good for local testing).
+        //  - ADMIN_PASSCODE: change this. Reachable at index.html#admin.
+        //    Note: this passcode is in client-side JS, so anyone reading the
+        //    source can find it. Use a real auth backend for production.
+        const LEAD_WEBHOOK_URL = "";
+        const ADMIN_PASSCODE = "trucker2025";
+
+        const ANALYTICS_KEY = "tb_analytics_v1";
+        const LEADS_KEY = "tb_leads_v1";
+        const VISITOR_KEY = "tb_visitor_id";
+        const FIRST_TOUCH_KEY = "tb_first_touch";
+        const LAST_TOUCH_KEY = "tb_last_touch";
+
+        const PAGE_LOAD_TS = Date.now();
+        const SESSION_ID = (() => {
+            let s = sessionStorage.getItem("tb_session_id");
+            if (!s) {
+                s = "s_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+                sessionStorage.setItem("tb_session_id", s);
+            }
+            return s;
+        })();
+
+        const VISITOR_ID = (() => {
+            let v = localStorage.getItem(VISITOR_KEY);
+            if (!v) {
+                v = "v_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+                localStorage.setItem(VISITOR_KEY, v);
+            }
+            return v;
+        })();
+
+        // Capture attribution: UTMs, click IDs, referrer, device, screen.
+        // First-touch is sticky for the visitor; last-touch updates every visit.
+        const ATTRIBUTION = (() => {
+            const params = new URLSearchParams(location.search);
+            const get = k => params.get(k) || null;
+            const ua = navigator.userAgent;
+            const touch = {
+                ts: Date.now(),
+                utm_source: get("utm_source"),
+                utm_medium: get("utm_medium"),
+                utm_campaign: get("utm_campaign"),
+                utm_content: get("utm_content"),
+                utm_term: get("utm_term"),
+                fbclid: get("fbclid"),
+                gclid: get("gclid"),
+                ttclid: get("ttclid"),
+                msclkid: get("msclkid"),
+                referrer: document.referrer || null,
+                landing_path: location.pathname + location.search,
+                screen: screen.width + "x" + screen.height,
+                viewport: window.innerWidth + "x" + window.innerHeight,
+                device: /iPad|iPhone|iPod|Android.*Mobile/.test(ua) ? "mobile"
+                      : /iPad|Tablet|Android(?!.*Mobile)/.test(ua) ? "tablet" : "desktop",
+                language: navigator.language || null,
+                user_agent: ua
+            };
+            try {
+                if (!localStorage.getItem(FIRST_TOUCH_KEY)) {
+                    localStorage.setItem(FIRST_TOUCH_KEY, JSON.stringify(touch));
+                }
+                localStorage.setItem(LAST_TOUCH_KEY, JSON.stringify(touch));
+            } catch (e) {}
+            return {
+                first: JSON.parse(localStorage.getItem(FIRST_TOUCH_KEY) || "null"),
+                last: touch,
+                source: touch.utm_source || (touch.fbclid ? "facebook"
+                       : touch.gclid ? "google"
+                       : touch.ttclid ? "tiktok"
+                       : touch.msclkid ? "bing"
+                       : (touch.referrer ? new URL(touch.referrer).hostname : "direct"))
+            };
+        })();
+
+        // Engagement signals
+        let MAX_SCROLL_PCT = 0;
+        let ACTIVE_MS = 0;
+        let _activeTickStart = Date.now();
+        let _isVisible = document.visibilityState === "visible";
+        const _scrollFired = {};
+
+        window.addEventListener("scroll", () => {
+            const h = document.documentElement;
+            const max = Math.max(1, h.scrollHeight - h.clientHeight);
+            const pct = Math.round((h.scrollTop / max) * 100);
+            if (pct > MAX_SCROLL_PCT) MAX_SCROLL_PCT = pct;
+            [25, 50, 75, 100].forEach(m => {
+                if (!_scrollFired[m] && MAX_SCROLL_PCT >= m) {
+                    _scrollFired[m] = true;
+                    trackEvent("scroll", { depth: m });
+                }
+            });
+        }, { passive: true });
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                _isVisible = true;
+                _activeTickStart = Date.now();
+            } else {
+                if (_isVisible) ACTIVE_MS += Date.now() - _activeTickStart;
+                _isVisible = false;
+            }
+        });
+
+        function flushActiveTime() {
+            if (_isVisible) {
+                ACTIVE_MS += Date.now() - _activeTickStart;
+                _activeTickStart = Date.now();
+            }
+        }
+
+        function trackEvent(name, data) {
+            flushActiveTime();
+            const evt = {
+                name: name,
+                data: data || {},
+                ts: Date.now(),
+                visitor: VISITOR_ID,
+                session: SESSION_ID,
+                source: ATTRIBUTION.source,
+                first_touch: ATTRIBUTION.first,
+                last_touch: ATTRIBUTION.last,
+                device: ATTRIBUTION.last && ATTRIBUTION.last.device,
+                path: location.pathname + location.search,
+                scroll_pct: MAX_SCROLL_PCT,
+                active_ms: ACTIVE_MS,
+                elapsed_ms: Date.now() - PAGE_LOAD_TS
+            };
+            try {
+                const list = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+                list.push(evt);
+                if (list.length > 8000) list.splice(0, list.length - 8000);
+                localStorage.setItem(ANALYTICS_KEY, JSON.stringify(list));
+            } catch (e) { /* storage may be full or blocked */ }
+
+            if (LEAD_WEBHOOK_URL) {
+                fetch(LEAD_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ kind: "event", ...evt }),
+                    keepalive: true
+                }).catch(() => {});
+            }
+            if (window.clarity) {
+                try { window.clarity("event", name); } catch (e) {}
+            }
+        }
+
+        function saveLead(lead) {
+            flushActiveTime();
+            // Independent TCPA consent proof — TrustedForm injects this hidden input
+            // automatically; we just read its value.
+            const tfInput = document.querySelector('input[name="xxTrustedFormCertUrl"]');
+            const trustedFormCert = tfInput ? tfInput.value : null;
+            const record = {
+                ...lead,
+                visitor: VISITOR_ID,
+                session: SESSION_ID,
+                source: ATTRIBUTION.source,
+                first_touch: ATTRIBUTION.first,
+                last_touch: ATTRIBUTION.last,
+                device: ATTRIBUTION.last && ATTRIBUTION.last.device,
+                scroll_pct: MAX_SCROLL_PCT,
+                active_ms: ACTIVE_MS,
+                time_to_complete_ms: Date.now() - PAGE_LOAD_TS,
+                trustedform_cert_url: trustedFormCert,
+                tcpa_consent: lead.tcpa_consent || null,
+                savedAt: new Date().toISOString(),
+                savedAtTs: Date.now()
+            };
+            try {
+                const leads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+                leads.push(record);
+                localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+            } catch (e) {}
+
+            if (LEAD_WEBHOOK_URL) {
+                fetch(LEAD_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ kind: "lead", ...record }),
+                    keepalive: true
+                }).catch(() => {});
+            }
+        }
+
+        // Best-effort partial-lead capture if user closes/refreshes mid-quiz.
+        window.addEventListener("beforeunload", () => {
+            flushActiveTime();
+            trackEvent("session_end", { active_ms: ACTIVE_MS, max_scroll: MAX_SCROLL_PCT });
+            if (quizCompleted) return;
+            if (Object.keys(userData).length === 0) return;
+            saveLead({ status: "partial", userData, answers, lastQuestion: currentQuestion });
+        });
+
+        // Exit intent (desktop only — mouse leaves top of viewport)
+        let _exitFired = false;
+        document.addEventListener("mouseleave", e => {
+            if (_exitFired || e.clientY > 0) return;
+            _exitFired = true;
+            trackEvent("exit_intent");
+        });
+
+        // ─── PIXEL / CONVERSION FIRING ─────────────────────────────────────
+        // One helper that fans out to Meta Pixel, GA4, and Google Ads.
+        // Respects user consent (cookie banner). Each network no-ops if not configured.
+        function fireConversion(name, params) {
+            params = params || {};
+            const consent = localStorage.getItem("tb_consent");
+            if (consent === "declined") return;
+
+            // Meta Pixel — uses standard event names: Lead, Contact, InitiateCheckout, etc.
+            if (window.fbq) {
+                try { fbq('track', name, params); } catch (e) {}
+            }
+
+            // GA4 — generic event
+            if (window.gtag && _isConfigured(window.TB_CONFIG.GA4_MEASUREMENT_ID)) {
+                try { gtag('event', name.toLowerCase(), params); } catch (e) {}
+            }
+
+            // Google Ads conversion — only fire mapped events
+            if (window.gtag && _isConfigured(window.TB_CONFIG.GOOGLE_ADS_ID)) {
+                let label = null;
+                if (name === "Lead")    label = window.TB_CONFIG.GOOGLE_ADS_LEAD_LABEL;
+                if (name === "Contact") label = window.TB_CONFIG.GOOGLE_ADS_CALL_LABEL;
+                if (label && _isConfigured(label)) {
+                    try {
+                        gtag('event', 'conversion', {
+                            'send_to': window.TB_CONFIG.GOOGLE_ADS_ID + '/' + label,
+                            'value': params.value || 0,
+                            'currency': params.currency || 'USD'
+                        });
+                    } catch (e) {}
+                }
+            }
+        }
+
+        // Page-view event fires immediately.
+        trackEvent("page_view");
+
+        function lockQuiz() {
+            if (quizLocked) return;
+            quizLocked = true;
+            trackEvent("quiz_started");
+            fireConversion("InitiateCheckout");
+            document.body.classList.add('quiz-active', 'quiz-locked');
+            window.scrollTo(0, 0);
+
+            // Push a state so the next browser-back lands here.
+            history.pushState({ quizLock: true }, '');
+            window.addEventListener('popstate', onPopStateLock);
+
+            // Warn before closing the tab.
+            window.addEventListener('beforeunload', onBeforeUnloadLock);
+        }
+
+        function unlockQuiz() {
+            quizCompleted = true;
+            // Release the scroll trap, but keep `quiz-active` so the rest of
+            // the page stays hidden through the IUL/call-now screens.
+            document.body.classList.remove('quiz-locked');
+            window.removeEventListener('popstate', onPopStateLock);
+            window.removeEventListener('beforeunload', onBeforeUnloadLock);
+        }
+
+        function onPopStateLock() {
+            if (quizCompleted) return;
+            // Re-push so back navigation stays trapped on the quiz.
+            history.pushState({ quizLock: true }, '');
+        }
+
+        function onBeforeUnloadLock(e) {
+            if (quizCompleted) return;
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+
+        // Auto-start quiz on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            renderQuestion();
+        });
+
+        function renderQuestion() {
+            const container = document.getElementById('questionsContainer');
+            const q = questions[currentQuestion];
+
+            questionStartTs = Date.now();
+            trackEvent("question_view", { number: q.number, text: q.text });
+
+            // Update phase indicator
+            document.getElementById('phaseIndicator').textContent = q.phaseLabel;
+
+            // Biased (sqrt) progress — feels fast at first, runs ahead of linear.
+            // Q1 of 12 reads ~29% instead of 8%.
+            const ratio = (currentQuestion + 1) / questions.length;
+            const progress = Math.pow(ratio, 0.5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            const subtextHtml = q.subtext
+                ? `<div class="question-subtext">${q.subtext}</div>`
+                : '';
+
+            // Text-input question
+            if (q.type === 'text') {
+                const autocomplete =
+                    q.inputType === 'phone' ? 'tel' :
+                    q.inputType === 'name' ? 'given-name' :
+                    q.inputType === 'email' ? 'email' :
+                    q.inputType === 'zipcode' ? 'postal-code' : 'off';
+                const inputType =
+                    q.inputType === 'email' ? 'email' :
+                    q.inputType === 'phone' ? 'tel' :
+                    q.inputType === 'zipcode' ? 'text' : 'text';
+                const inputMode =
+                    q.inputType === 'phone' || q.inputType === 'zipcode' ? 'numeric' :
+                    q.inputType === 'email' ? 'email' : 'text';
+
+                const prefillAttr = pendingPrefill != null
+                    ? ` value="${String(pendingPrefill).replace(/"/g, '&quot;')}"`
+                    : '';
+                pendingPrefill = null;
+
+                container.innerHTML = `
+                    <div class="question active">
+                        <div class="question-text">${q.text}</div>
+                        ${subtextHtml}
+                        <div class="text-input-container">
+                            <input type="${inputType}"
+                                   class="text-input"
+                                   id="textInput"
+                                   placeholder="${q.placeholder}"
+                                   autocomplete="${autocomplete}"
+                                   inputmode="${inputMode}"${prefillAttr}>
+                            <button class="continue-button" onclick="submitTextAnswer()">
+                                CONTINUE →
+                            </button>
+                            ${q.optional ? '<button class="skip-button" onclick="skipQuestion()">Skip this step</button>' : ''}
+                        </div>
+                    </div>
+                `;
+
+                if (q.inputType === 'phone') {
+                    const input = document.getElementById('textInput');
+                    input.addEventListener('input', function(e) {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length > 0) {
+                            if (value.length <= 3) {
+                                value = '(' + value;
+                            } else if (value.length <= 6) {
+                                value = '(' + value.slice(0, 3) + ') ' + value.slice(3);
+                            } else {
+                                value = '(' + value.slice(0, 3) + ') ' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                            }
+                        }
+                        e.target.value = value;
+                    });
+                }
+
+                if (q.inputType === 'dob') {
+                    const input = document.getElementById('textInput');
+                    input.addEventListener('input', function(e) {
+                        let v = e.target.value.replace(/\D/g, '').slice(0, 8);
+                        if (v.length >= 5) v = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+                        else if (v.length >= 3) v = v.slice(0, 2) + '/' + v.slice(2);
+                        e.target.value = v;
+                    });
+                }
+
+                setTimeout(() => {
+                    const el = document.getElementById('textInput');
+                    if (el) el.focus({ preventScroll: true });
+                }, 100);
+
+                document.getElementById('textInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') submitTextAnswer();
+                });
+            } else {
+                // Multiple choice
+                container.innerHTML = `
+                    <div class="question active">
+                        <div class="question-text">${q.text}</div>
+                        ${subtextHtml}
+                        <div class="options">
+                            ${q.options.map((option, index) => `
+                                <div class="option" onclick="selectAnswer(${index}, '${option.replace(/'/g, "\\'")}')">
+                                    ${option}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Keep the quiz card pinned to the top of the viewport on advance.
+            // Skip on the very first render so the user isn't yanked past the headline.
+            if (currentQuestion > 0) {
+                const quiz = document.getElementById('quizEmbed');
+                if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function selectAnswer(index, answer) {
+            lockQuiz();
+            const q = questions[currentQuestion];
+            const dwell_ms = questionStartTs ? Date.now() - questionStartTs : 0;
+            trackEvent("question_answered", { number: q.number, answer: answer, dwell_ms });
+            answers.push({
+                question: currentQuestion,
+                answer: answer
+            });
+
+            const options = document.querySelectorAll('.option');
+            options[index].classList.add('selected');
+
+            setTimeout(advance, 250);
+        }
+
+        function submitTextAnswer() {
+            lockQuiz();
+            const input = document.getElementById('textInput');
+            const value = input.value.trim();
+            const q = questions[currentQuestion];
+
+            if (value === '') {
+                if (q.optional) { skipQuestion(); return; }
+                flagInvalid(input);
+                return;
+            }
+
+            if (q.inputType === 'email' && !isValidEmail(value)) {
+                flagInvalid(input);
+                return;
+            }
+            if (q.inputType === 'phone') {
+                if (value.replace(/\D/g, '').length < 10) {
+                    flagInvalid(input);
+                    return;
+                }
+                renderPhoneConfirm(value);
+                return;
+            }
+            if (q.inputType === 'zipcode' && !/^\d{5}(-\d{4})?$/.test(value)) {
+                flagInvalid(input);
+                return;
+            }
+            if (q.inputType === 'dob') {
+                const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+                if (!m) { flagInvalid(input); return; }
+                const month = parseInt(m[1], 10);
+                const day = parseInt(m[2], 10);
+                const year = parseInt(m[3], 10);
+                const dob = new Date(year, month - 1, day);
+                const valid = dob.getFullYear() === year && dob.getMonth() === month - 1 && dob.getDate() === day;
+                if (!valid) { flagInvalid(input); return; }
+                const today = new Date();
+                let age = today.getFullYear() - year;
+                const beforeBday = today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day);
+                if (beforeBday) age--;
+                if (age < 18 || age > 90) { flagInvalid(input); return; }
+                userData.age = age;
+            }
+
+            if (q.inputType === 'name') userData.firstName = value;
+            if (q.inputType === 'email') {
+                userData.email = value;
+                fireConversion("Lead", { content_name: "Email Captured" });
+            }
+            if (q.inputType === 'dob') userData.dob = value;
+            if (q.inputType === 'zipcode') userData.zip = value;
+
+            const dwell_ms = questionStartTs ? Date.now() - questionStartTs : 0;
+            trackEvent("question_answered", { number: q.number, inputType: q.inputType, dwell_ms });
+
+            answers.push({ question: currentQuestion, answer: value });
+            advance();
+        }
+
+        function renderPhoneConfirm(value) {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = `
+                <div class="question active">
+                    <div class="question-text">Is this the right phone number?</div>
+                    <div class="question-subtext">Double-check — this is where we'll call you with your personalized plan.</div>
+                    <div class="phone-confirm-display">${value}</div>
+                    <button class="continue-button" onclick="confirmPhone('${value.replace(/'/g, "\\'")}')">
+                        YES, CALL ME WITH MY PLAN →
+                    </button>
+                    <button class="skip-button" onclick="editPhone('${value.replace(/'/g, "\\'")}')">
+                        No, edit number
+                    </button>
+                    <p class="tcpa-consent">
+                        By clicking above and providing my phone number, I provide my prior express written consent
+                        to receive marketing calls and text messages — including via automated technology, prerecorded or artificial
+                        voice messages, and SMS — from <strong>Trucker Benefit</strong> and its marketing partners and licensed
+                        insurance agents at the number provided, even if it is on a state or federal Do Not Call list. Consent is
+                        not a condition of any purchase. Message and data rates may apply; reply STOP to opt out.
+                        See our <a href="privacy.html" target="_blank">Privacy Policy</a> and
+                        <a href="terms.html" target="_blank">Terms</a>.
+                    </p>
+                </div>
+            `;
+            const quiz = document.getElementById('quizEmbed');
+            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function confirmPhone(value) {
+            userData.phone = value;
+            // TCPA consent captured at the moment of click — preserve full text + timestamp
+            // so it can travel with the lead to your CRM and to TrustedForm/Jornaya.
+            userData.tcpa_consent = {
+                accepted: true,
+                ts: new Date().toISOString(),
+                text: "By clicking 'YES, CALL ME WITH MY PLAN' the user provided prior express written consent to be contacted by Trucker Benefit and its marketing partners/licensed agents at the number provided, including via automated technology and SMS, even if on DNC list. Consent not required for purchase.",
+                page_url: location.href
+            };
+            trackEvent("phone_confirmed");
+            answers.push({ question: currentQuestion, answer: value });
+            advance();
+        }
+
+        function editPhone(value) {
+            pendingPrefill = value;
+            renderQuestion();
+        }
+
+        function skipQuestion() {
+            answers.push({ question: currentQuestion, answer: '' });
+            advance();
+        }
+
+        function advance() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function flagInvalid(input) {
+            input.style.borderColor = '#FF6B35';
+            input.focus();
+        }
+
+        function isValidEmail(v) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+        }
+
+        const TESTIMONIALS = [
+            {
+                quote: "I was skeptical, but they got me $250K coverage for $89/mo. My wife can finally sleep at night.",
+                name: "Mike R.",
+                role: "OTR Driver, Texas"
+            },
+            {
+                quote: "Diagnosed with cancer last year. The Living Benefits paid me $150K immediately — game changer.",
+                name: "James T.",
+                role: "Owner-Operator, Ohio"
+            },
+            {
+                quote: "After 22 years on the road, I finally have a plan that protects my family if I can't drive.",
+                name: "Carlos M.",
+                role: "Regional Driver, Florida"
+            }
+        ];
+
+        function showResults() {
+            console.log('Quiz Answers:', answers, 'User:', userData);
+            trackEvent("quiz_completed");
+            fireConversion("Lead", { content_name: "Quiz Complete", value: 1, currency: "USD" });
+            fireConversion("CompleteRegistration");
+            saveLead({ status: "complete", userData, answers, tcpa_consent: userData.tcpa_consent });
+
+            document.querySelector('.progress-bar').style.display = 'none';
+            document.getElementById('phaseIndicator').style.display = 'none';
+            document.getElementById('questionsContainer').style.display = 'none';
+
+            const resultsPage = document.getElementById('resultsPage');
+            resultsPage.classList.add('active');
+
+            const name = (userData.firstName || '').trim();
+            const greet = name ? name.toUpperCase() : 'YOU';
+
+            resultsPage.innerHTML = `
+                <div class="loading-screen">
+                    <div class="spinner"></div>
+                    <h2 class="loading-title">Loading personalized plan for <span class="loading-name">${greet}</span>…</h2>
+                    <div class="loading-steps" id="loadingSteps">
+                        <div class="loading-step active">✓ Analyzing your answers</div>
+                        <div class="loading-step">✓ Matching you with 60+ A-rated carriers</div>
+                        <div class="loading-step">✓ Calculating your eligible coverage</div>
+                    </div>
+                    <div class="testimonial-rotator" id="testimonialRotator"></div>
+                </div>
+            `;
+
+            const quiz = document.getElementById('quizEmbed');
+            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            const rotator = document.getElementById('testimonialRotator');
+            const renderTestimonial = (i) => {
+                const t = TESTIMONIALS[i];
+                rotator.innerHTML = `
+                    <div class="testimonial">
+                        <div class="testimonial-quote">"${t.quote}"</div>
+                        <div class="testimonial-attr">— ${t.name}, ${t.role}</div>
+                    </div>
+                `;
+            };
+            renderTestimonial(0);
+
+            let i = 0;
+            const interval = setInterval(() => {
+                i = (i + 1) % TESTIMONIALS.length;
+                renderTestimonial(i);
+            }, 2200);
+
+            const steps = document.querySelectorAll('#loadingSteps .loading-step');
+            setTimeout(() => steps[1] && steps[1].classList.add('active'), 2000);
+            setTimeout(() => steps[2] && steps[2].classList.add('active'), 4200);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                showIULRecommendation();
+            }, 6800);
+        }
+
+        function showIULRecommendation() {
+            unlockQuiz();
+            trackEvent("iul_revealed");
+            const resultsPage = document.getElementById('resultsPage');
+            const name = (userData.firstName || '').trim();
+            const greet = name ? `${name},` : '';
+
+            resultsPage.innerHTML = `
+                <div class="iul-reveal">
+                    <div class="iul-badge">YOUR BEST MATCH</div>
+                    <h2 class="iul-headline">Indexed Universal Life (IUL)</h2>
+                    <p class="iul-tagline">${greet} based on your answers, this is the strongest fit for you.</p>
+
+                    <div class="iul-benefits">
+                        <div class="iul-benefit"><strong>Pays you while alive.</strong> Heart attack, cancer, stroke, or disability — you get the money when you need it, not just when you die.</div>
+                        <div class="iul-benefit"><strong>Tax-free growth.</strong> Cash value compounds over time and can be accessed tax-free.</div>
+                        <div class="iul-benefit"><strong>Locked-in rates.</strong> Today's age = today's price, for life.</div>
+                        <div class="iul-benefit"><strong>Built for truckers.</strong> Designed around the unique health and income realities of CDL drivers.</div>
+                    </div>
+
+                    <a href="tel:${CALL_NOW_TEL}" class="call-now-button iul-call-now" onclick="trackEvent('call_clicked', { from: 'iul_screen' }); fireConversion('Contact', { value: 1, currency: 'USD' });">
+                        📞 CALL NOW: ${CALL_NOW_NUMBER}
+                    </a>
+                    <p class="iul-call-sub">Talk to a Trucker Benefit Specialist now to explore your options. Free 15-min consult.</p>
+
+                    <p class="iul-disclaimer">No cost · No obligation · Licensed agents standing by</p>
+
+                    <div class="share-card">
+                        <div class="share-card-icon">🤝</div>
+                        <h3 class="share-card-title">Help a fellow trucker</h3>
+                        <p class="share-card-sub">Most CDL drivers don't know this coverage exists. Send a friend the same free assessment — could save their family.</p>
+                        <button class="share-card-button" onclick="shareWithFriend()">
+                            📲 SHARE WITH A TRUCKER FRIEND
+                        </button>
+                        <p class="share-card-fineprint">Opens your messages with a pre-filled note — pick the friend, hit send.</p>
+                    </div>
+                </div>
+            `;
+            const quiz = document.getElementById('quizEmbed');
+            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showCallNow() {
+            unlockQuiz();
+            const resultsPage = document.getElementById('resultsPage');
+            const name = (userData.firstName || '').trim();
+            const greet = name ? `${name}, your` : 'Your';
+
+            resultsPage.innerHTML = `
+                <div class="call-now-screen">
+                    <div class="call-now-badge">⚡ ACT NOW — RATES LOCK AT TODAY'S AGE</div>
+                    <h2 class="call-now-headline">${greet} plan is ready.</h2>
+                    <p class="call-now-sub">Tap the number below to talk to a Trucker Benefit Specialist and lock in your IUL coverage. Most calls take under 15 minutes.</p>
+
+                    <a href="tel:${CALL_NOW_TEL}" class="call-now-button" onclick="trackEvent('call_clicked', { from: 'call_now_screen' }); fireConversion('Contact', { value: 1, currency: 'USD' });">
+                        📞 CALL NOW: ${CALL_NOW_NUMBER}
+                    </a>
+
+                    <div class="call-now-trust">
+                        <div>✓ Free consult — no cost, no obligation</div>
+                        <div>✓ Licensed agents standing by</div>
+                        <div>✓ Quote in under 15 minutes</div>
+                    </div>
+
+                    <p class="call-now-fineprint">Can't talk now? We'll also email and call you back at ${userData.phone || 'your number'}.</p>
+
+                    <div class="share-card">
+                        <div class="share-card-icon">🤝</div>
+                        <h3 class="share-card-title">Help a fellow trucker</h3>
+                        <p class="share-card-sub">Most CDL drivers don't know this coverage exists. Send a friend the same free assessment — could save their family.</p>
+                        <button class="share-card-button" onclick="shareWithFriend()">
+                            📲 SHARE WITH A TRUCKER FRIEND
+                        </button>
+                        <p class="share-card-fineprint">Opens your messages with a pre-filled note — pick the friend, hit send.</p>
+                    </div>
+                </div>
+            `;
+
+            const quiz = document.getElementById('quizEmbed');
+            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function shareWithFriend() {
+            trackEvent("share_clicked");
+            const url = 'https://truckerbenefit.com';
+            const text = "Hey — just took this 60-second assessment for trucker financial protection. Worth checking out, free and no pressure: ";
+            const shareData = {
+                title: 'Free Financial Plan for Truckers',
+                text: text,
+                url: url
+            };
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                    return;
+                } catch (e) {
+                    // user cancelled or share failed — fall through to SMS
+                }
+            }
+            // Fallback: open SMS composer pre-filled.
+            const body = encodeURIComponent(text + url);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            window.location.href = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
+        }
+        function scrollToQuiz() {
+            const quiz = document.getElementById('quizEmbed');
+            if (!quiz) return;
+            quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const firstOption = quiz.querySelector('.option, .text-input');
+            if (firstOption && firstOption.classList.contains('text-input')) {
+                setTimeout(() => firstOption.focus({ preventScroll: true }), 600);
+            }
+        }
+
+        // ─── ADMIN DASHBOARD ───────────────────────────────────────────────
+        const adminFilter = {
+            window: "7d",        // today | 7d | 30d | all
+            source: "all",       // "all" | specific source
+            device: "all",       // "all" | "mobile" | "desktop" | "tablet"
+            expanded: null       // visitor id of expanded lead row
+        };
+        let adminRefreshTimer = null;
+
+        function checkAdminAccess() {
+            if (location.hash !== "#admin") return;
+            if (document.body.classList.contains("admin-open")) return;
+            const code = prompt("Admin passcode:");
+            if (code !== ADMIN_PASSCODE) {
+                alert("Invalid passcode.");
+                location.hash = "";
+                return;
+            }
+            renderAdminDashboard();
+            adminRefreshTimer = setInterval(renderAdminDashboard, 15000);
+        }
+
+        function closeAdmin() {
+            document.getElementById("adminDashboard").style.display = "none";
+            document.body.classList.remove("admin-open");
+            if (adminRefreshTimer) { clearInterval(adminRefreshTimer); adminRefreshTimer = null; }
+            location.hash = "";
+        }
+
+        function setAdminFilter(key, value) {
+            adminFilter[key] = value;
+            adminFilter.expanded = null;
+            renderAdminDashboard();
+        }
+
+        function toggleLeadExpand(visitor, savedAtTs) {
+            const id = visitor + ":" + savedAtTs;
+            adminFilter.expanded = adminFilter.expanded === id ? null : id;
+            renderAdminDashboard();
+        }
+
+        function windowStartTs(win) {
+            const now = Date.now();
+            if (win === "today") {
+                const d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+            }
+            if (win === "7d") return now - 7 * 86400000;
+            if (win === "30d") return now - 30 * 86400000;
+            return 0;
+        }
+
+        function fmtMs(ms) {
+            if (!ms || ms < 1000) return (ms || 0) + "ms";
+            const s = Math.round(ms / 1000);
+            if (s < 60) return s + "s";
+            return Math.floor(s/60) + "m " + (s%60) + "s";
+        }
+
+        function pct(num, denom) {
+            if (!denom) return "—";
+            return ((num / denom) * 100).toFixed(1) + "%";
+        }
+
+        function median(arr) {
+            if (!arr.length) return 0;
+            const s = arr.slice().sort((a,b) => a-b);
+            const m = Math.floor(s.length/2);
+            return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
+        }
+
+        function renderAdminDashboard() {
+            const dash = document.getElementById("adminDashboard");
+            dash.style.display = "block";
+            document.body.classList.add("admin-open");
+
+            const allEvents = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+            const allLeads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+
+            // Apply cohort filters
+            const cutoff = windowStartTs(adminFilter.window);
+            const inCohort = item => {
+                if ((item.ts || item.savedAtTs) < cutoff) return false;
+                if (adminFilter.source !== "all" && item.source !== adminFilter.source) return false;
+                if (adminFilter.device !== "all" && item.device !== adminFilter.device) return false;
+                return true;
+            };
+            const events = allEvents.filter(inCohort);
+            const leads = allLeads.filter(inCohort);
+
+            // Available source/device options (from full data, not just filtered)
+            const sourceSet = new Set(allEvents.map(e => e.source).filter(Boolean));
+            const deviceSet = new Set(allEvents.map(e => e.device).filter(Boolean));
+
+            // Top-line counts
+            const visitors = new Set(events.map(e => e.visitor)).size;
+            const sessions = new Set(events.map(e => e.session)).size;
+            const pageViews = events.filter(e => e.name === "page_view").length;
+            const quizStarts = events.filter(e => e.name === "quiz_started").length;
+            const quizStartVisitors = new Set(events.filter(e => e.name === "quiz_started").map(e => e.visitor)).size;
+            const quizCompletes = events.filter(e => e.name === "quiz_completed").length;
+            const completeVisitors = new Set(events.filter(e => e.name === "quiz_completed").map(e => e.visitor)).size;
+            const callClicks = events.filter(e => e.name === "call_clicked").length;
+            const callVisitors = new Set(events.filter(e => e.name === "call_clicked").map(e => e.visitor)).size;
+            const shareClicks = events.filter(e => e.name === "share_clicked").length;
+            const exitIntents = events.filter(e => e.name === "exit_intent").length;
+            const completedLeads = leads.filter(l => l.status === "complete").length;
+            const partialLeads = leads.filter(l => l.status === "partial").length;
+
+            // Conversion rates
+            const startCR = pct(quizStartVisitors, visitors);
+            const completeCR = pct(completeVisitors, quizStartVisitors);
+            const callCR = pct(callVisitors, completeVisitors);
+            const overallCR = pct(callVisitors, visitors);
+
+            // Engagement
+            const sessionEnds = events.filter(e => e.name === "session_end");
+            const medianActive = median(sessionEnds.map(e => e.data.active_ms || 0));
+            const medianScroll = median(sessionEnds.map(e => e.data.max_scroll || 0));
+            const scroll75 = events.filter(e => e.name === "scroll" && e.data.depth >= 75).length;
+
+            // Funnel by question
+            const viewsByQ = {}, answersByQ = {}, dwellByQ = {};
+            events.forEach(e => {
+                const n = e.data && e.data.number;
+                if (!n) return;
+                if (e.name === "question_view") viewsByQ[n] = (viewsByQ[n] || 0) + 1;
+                if (e.name === "question_answered") {
+                    answersByQ[n] = (answersByQ[n] || 0) + 1;
+                    if (e.data.dwell_ms) {
+                        if (!dwellByQ[n]) dwellByQ[n] = [];
+                        dwellByQ[n].push(e.data.dwell_ms);
+                    }
+                }
+            });
+            const totalQs = questions.length;
+            const firstQViews = viewsByQ[1] || 0;
+            const funnelRows = [];
+            for (let n = 1; n <= totalQs; n++) {
+                const q = questions[n - 1];
+                const viewed = viewsByQ[n] || 0;
+                const answered = answersByQ[n] || 0;
+                const dropOff = viewed - answered;
+                const reachPct = firstQViews ? ((viewed / firstQViews) * 100).toFixed(1) : "0.0";
+                const dropPct = viewed ? ((dropOff / viewed) * 100).toFixed(1) : "0.0";
+                const med = dwellByQ[n] ? fmtMs(median(dwellByQ[n])) : "—";
+                const dropClass = parseFloat(dropPct) > 30 ? 'admin-warn' : (parseFloat(dropPct) > 15 ? 'admin-caution' : '');
+                funnelRows.push(`
+                    <tr>
+                        <td><strong>Q${n}</strong></td>
+                        <td class="admin-q-text">${(q && q.text || "").replace(/</g, "&lt;").slice(0, 80)}</td>
+                        <td>${viewed}</td>
+                        <td>${answered}</td>
+                        <td>${reachPct}%</td>
+                        <td class="${dropClass}">${dropOff} (${dropPct}%)</td>
+                        <td>${med}</td>
+                    </tr>
+                `);
+            }
+
+            // Attribution by source
+            const bySource = {};
+            events.forEach(e => {
+                const src = e.source || "(unknown)";
+                if (!bySource[src]) bySource[src] = { visitors: new Set(), starts: new Set(), completes: new Set(), calls: new Set() };
+                bySource[src].visitors.add(e.visitor);
+                if (e.name === "quiz_started") bySource[src].starts.add(e.visitor);
+                if (e.name === "quiz_completed") bySource[src].completes.add(e.visitor);
+                if (e.name === "call_clicked") bySource[src].calls.add(e.visitor);
+            });
+            const sourceRows = Object.entries(bySource)
+                .sort((a,b) => b[1].visitors.size - a[1].visitors.size)
+                .map(([src, s]) => `
+                    <tr>
+                        <td><strong>${src.replace(/</g, "&lt;")}</strong></td>
+                        <td>${s.visitors.size}</td>
+                        <td>${s.starts.size}</td>
+                        <td>${s.completes.size}</td>
+                        <td>${s.calls.size}</td>
+                        <td>${pct(s.starts.size, s.visitors.size)}</td>
+                        <td>${pct(s.completes.size, s.starts.size)}</td>
+                        <td class="${s.calls.size && s.visitors.size ? 'admin-good' : ''}">${pct(s.calls.size, s.visitors.size)}</td>
+                    </tr>
+                `).join("");
+
+            // Lead rows (newest first), with expandable detail
+            const leadRows = leads.slice().sort((a,b) => (b.savedAtTs||0) - (a.savedAtTs||0)).map(l => {
+                const id = l.visitor + ":" + l.savedAtTs;
+                const isExpanded = adminFilter.expanded === id;
+                const expanded = isExpanded ? `
+                    <tr class="admin-lead-detail">
+                        <td colspan="9">
+                            <div class="admin-detail-grid">
+                                <div>
+                                    <div class="admin-detail-label">Attribution</div>
+                                    <div class="admin-detail-row"><span>Source</span><code>${l.source || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>UTM Campaign</span><code>${(l.first_touch && l.first_touch.utm_campaign) || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>UTM Medium</span><code>${(l.first_touch && l.first_touch.utm_medium) || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>fbclid</span><code>${(l.first_touch && l.first_touch.fbclid) || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>gclid</span><code>${(l.first_touch && l.first_touch.gclid) || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>Referrer</span><code>${(l.first_touch && l.first_touch.referrer) || "—"}</code></div>
+                                </div>
+                                <div>
+                                    <div class="admin-detail-label">Engagement</div>
+                                    <div class="admin-detail-row"><span>Visitor</span><code>${l.visitor}</code></div>
+                                    <div class="admin-detail-row"><span>Device</span><code>${l.device || "—"}</code></div>
+                                    <div class="admin-detail-row"><span>Time on page</span><code>${fmtMs(l.time_to_complete_ms)}</code></div>
+                                    <div class="admin-detail-row"><span>Active time</span><code>${fmtMs(l.active_ms)}</code></div>
+                                    <div class="admin-detail-row"><span>Max scroll</span><code>${l.scroll_pct || 0}%</code></div>
+                                </div>
+                                <div>
+                                    <div class="admin-detail-label">Answers (${(l.answers||[]).length})</div>
+                                    ${(l.answers||[]).map(a => {
+                                        const q = questions[a.question];
+                                        return `<div class="admin-detail-row"><span>Q${q && q.number}</span><code>${String(a.answer).slice(0, 60).replace(/</g, "&lt;")}</code></div>`;
+                                    }).join("")}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                ` : "";
+                return `
+                    <tr class="admin-lead-row ${isExpanded ? 'admin-lead-row-active' : ''}" onclick="toggleLeadExpand('${l.visitor}', ${l.savedAtTs})">
+                        <td>${new Date(l.savedAt).toLocaleString()}</td>
+                        <td><span class="admin-pill admin-pill-${l.status}">${l.status}</span></td>
+                        <td><span class="admin-pill">${l.source || "—"}</span></td>
+                        <td>${(l.userData && l.userData.firstName) || ""}</td>
+                        <td>${(l.userData && l.userData.email) || ""}</td>
+                        <td>${(l.userData && l.userData.phone) || ""}</td>
+                        <td>${(l.userData && l.userData.zip) || ""}</td>
+                        <td>${(l.answers && l.answers.length) || 0}</td>
+                        <td>${fmtMs(l.time_to_complete_ms)}</td>
+                    </tr>
+                    ${expanded}
+                `;
+            }).join("");
+
+            const sourceOptions = ["all", ...sourceSet].map(s => `<option value="${s}" ${adminFilter.source===s?'selected':''}>${s}</option>`).join("");
+            const deviceOptions = ["all", ...deviceSet].map(d => `<option value="${d}" ${adminFilter.device===d?'selected':''}>${d}</option>`).join("");
+
+            const winBtn = (key, label) => `<button class="${adminFilter.window===key?'admin-pill-active':''}" onclick="setAdminFilter('window','${key}')">${label}</button>`;
+
+            dash.innerHTML = `
+                <div class="admin-topbar">
+                    <h1>📊 Admin · <span style="color:#FFB800">Trucker Benefit</span></h1>
+                    <div class="admin-topbar-actions">
+                        <span class="admin-session">Visitor: <code>${VISITOR_ID}</code></span>
+                        <button onclick="closeAdmin()">Close</button>
+                    </div>
+                </div>
+
+                <div class="admin-filterbar">
+                    <div class="admin-filter-group">
+                        <label>Window</label>
+                        <div class="admin-pillgroup">${winBtn("today","Today")}${winBtn("7d","7d")}${winBtn("30d","30d")}${winBtn("all","All-time")}</div>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label>Source</label>
+                        <select onchange="setAdminFilter('source', this.value)">${sourceOptions}</select>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label>Device</label>
+                        <select onchange="setAdminFilter('device', this.value)">${deviceOptions}</select>
+                    </div>
+                    <div class="admin-filter-group" style="margin-left:auto;">
+                        <span class="admin-live">● LIVE · refresh 15s</span>
+                    </div>
+                </div>
+
+                <div class="admin-grid">
+                    <div class="admin-stat"><div class="admin-stat-num">${visitors}</div><div class="admin-stat-label">Unique Visitors</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${pageViews}</div><div class="admin-stat-label">Page Views</div><div class="admin-stat-sub">${sessions} sessions</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${quizStartVisitors}</div><div class="admin-stat-label">Quiz Starts</div><div class="admin-stat-sub">CR ${startCR}</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${completeVisitors}</div><div class="admin-stat-label">Quiz Completes</div><div class="admin-stat-sub">CR ${completeCR}</div></div>
+                    <div class="admin-stat admin-stat-hi"><div class="admin-stat-num">${callVisitors}</div><div class="admin-stat-label">Call Clicks</div><div class="admin-stat-sub">CR ${callCR}</div></div>
+                    <div class="admin-stat admin-stat-hi"><div class="admin-stat-num">${overallCR}</div><div class="admin-stat-label">Overall Visitor → Call</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${completedLeads}</div><div class="admin-stat-label">Complete Leads</div><div class="admin-stat-sub">${partialLeads} partial</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${shareClicks}</div><div class="admin-stat-label">Share Clicks</div><div class="admin-stat-sub">${exitIntents} exit-intents</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${fmtMs(medianActive)}</div><div class="admin-stat-label">Median Active Time</div></div>
+                    <div class="admin-stat"><div class="admin-stat-num">${Math.round(medianScroll)}%</div><div class="admin-stat-label">Median Max Scroll</div><div class="admin-stat-sub">${scroll75} reached 75%+</div></div>
+                </div>
+
+                <h2>Quiz Funnel · Drop-off + Median Dwell</h2>
+                <p class="admin-note">Reach = % of visitors who got this far vs. Q1. Drop-off >30% = red, >15% = yellow.</p>
+                <table class="admin-table">
+                    <thead><tr><th>#</th><th>Question</th><th>Viewed</th><th>Answered</th><th>Reach</th><th>Drop-off</th><th>Med. Dwell</th></tr></thead>
+                    <tbody>${funnelRows.join("")}</tbody>
+                </table>
+
+                <h2>Attribution · By Source</h2>
+                <p class="admin-note">Source = utm_source if present, else inferred from click ID (fbclid → facebook, gclid → google), else referrer hostname, else "direct".</p>
+                <table class="admin-table">
+                    <thead><tr><th>Source</th><th>Visitors</th><th>Starts</th><th>Completes</th><th>Calls</th><th>Start CR</th><th>Complete CR</th><th>Visitor→Call</th></tr></thead>
+                    <tbody>${sourceRows || '<tr><td colspan="8" class="admin-empty">No traffic in this cohort yet.</td></tr>'}</tbody>
+                </table>
+
+                <div class="admin-actions">
+                    <h2 style="margin: 0;">Leads (${leads.length}) <span style="font-size:13px;font-weight:400;color:#888">· click row for details</span></h2>
+                    <div>
+                        <button onclick="exportLeadsCSV()">⬇ Export CSV</button>
+                        <button onclick="exportEventsJSON()">⬇ Export Events JSON</button>
+                        <button onclick="clearLocalAnalytics()" class="admin-danger">🗑 Clear local data</button>
+                    </div>
+                </div>
+                <table class="admin-table admin-leads-table">
+                    <thead><tr><th>Saved</th><th>Status</th><th>Source</th><th>Name</th><th>Email</th><th>Phone</th><th>Zip</th><th>Answers</th><th>Time on Page</th></tr></thead>
+                    <tbody>${leadRows || '<tr><td colspan="9" class="admin-empty">No leads in this cohort yet.</td></tr>'}</tbody>
+                </table>
+
+                <h2>Heatmaps & Recordings</h2>
+                <p class="admin-note">
+                    Heatmaps, scroll-maps, click-maps, and full session recordings live in your Microsoft Clarity dashboard.
+                    ${"YOUR_CLARITY_PROJECT_ID" === "YOUR_CLARITY_PROJECT_ID"
+                        ? '<strong style="color:#FF6B6B;"> Not yet configured</strong> — sign up at <a href="https://clarity.microsoft.com" target="_blank">clarity.microsoft.com</a> and replace <code>YOUR_CLARITY_PROJECT_ID</code> in this file.'
+                        : ''}
+                </p>
+                <p><a class="admin-link" href="https://clarity.microsoft.com" target="_blank">Open Clarity Dashboard →</a></p>
+
+                <h2>Webhook Status</h2>
+                <p class="admin-note">${LEAD_WEBHOOK_URL
+                    ? `✅ Sending to: <code>${LEAD_WEBHOOK_URL}</code>`
+                    : '⚠️ No webhook configured. Leads + events save to localStorage only (per-browser, not cross-device). Set <code>LEAD_WEBHOOK_URL</code> in the script (Zapier, Make, Supabase Edge Function, or your own backend) for true cross-device persistence and Hyros-grade attribution.'}</p>
+            `;
+        }
+
+        function exportLeadsCSV() {
+            const leads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+            if (!leads.length) { alert("No leads to export."); return; }
+            const headers = [
+                "savedAt", "status", "visitor", "session", "source", "device",
+                "firstName", "email", "phone", "dob", "age", "zip",
+                "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term",
+                "fbclid", "gclid", "ttclid", "msclkid", "referrer", "landing_path",
+                "time_to_complete_ms", "active_ms", "scroll_pct"
+            ];
+            const get = (l, h) => {
+                if (["savedAt","status","visitor","session","source","device","time_to_complete_ms","active_ms","scroll_pct"].includes(h)) return l[h];
+                if (["firstName","email","phone","dob","age","zip"].includes(h)) return (l.userData||{})[h];
+                return (l.first_touch||{})[h];
+            };
+            const rows = leads.map(l => headers.map(h =>
+                `"${String(get(l, h) ?? "").replace(/"/g, '""')}"`
+            ).join(","));
+            const csv = headers.join(",") + "\n" + rows.join("\n");
+            downloadFile(csv, "trucker-benefit-leads.csv", "text/csv");
+        }
+
+        function exportEventsJSON() {
+            const events = localStorage.getItem(ANALYTICS_KEY) || "[]";
+            downloadFile(events, "trucker-benefit-events.json", "application/json");
+        }
+
+        function downloadFile(content, filename, mime) {
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearLocalAnalytics() {
+            if (!confirm("Clear ALL local analytics + leads from this browser? This cannot be undone.")) return;
+            localStorage.removeItem(ANALYTICS_KEY);
+            localStorage.removeItem(LEADS_KEY);
+            renderAdminDashboard();
+        }
+
+        window.addEventListener("hashchange", checkAdminAccess);
+        document.addEventListener("DOMContentLoaded", checkAdminAccess);
+    </script>
+
+    <!-- Sticky bottom CTA bar — visible while users scroll the page -->
+    <div class="sticky-cta" id="stickyCta" role="complementary" aria-label="Start the assessment">
+        <div class="sticky-cta-text">
+            <strong>⏱️ 60 seconds.</strong> See your personalized plan.
+        </div>
+        <button class="sticky-cta-button" onclick="scrollToQuiz()">START THE QUIZ →</button>
+    </div>
+
+    <!-- Cookie consent banner (CCPA/GDPR-friendly). Pixels respect this. -->
+    <div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Cookie consent">
+        <div class="cookie-banner-title">🍪 We use cookies & analytics</div>
+        <p class="cookie-banner-text">
+            We use cookies and similar tools (including Meta Pixel, Google Analytics, and Microsoft Clarity)
+            to measure ad performance and improve this page. See our
+            <a href="privacy.html" target="_blank">Privacy Policy</a>.
+        </p>
+        <div class="cookie-banner-actions">
+            <button class="cookie-btn-decline" onclick="setConsent('declined')">Decline</button>
+            <button class="cookie-btn-accept" onclick="setConsent('accepted')">Accept</button>
+        </div>
+    </div>
+
+    <!-- Compliance footer -->
+    <footer class="site-footer">
+        <div>
+            <a href="privacy.html">Privacy Policy</a> ·
+            <a href="terms.html">Terms of Service</a> ·
+            <a href="#" onclick="event.preventDefault(); openCookieBanner();">Cookie Settings</a> ·
+            <a href="mailto:support@truckerbenefit.com">Contact</a>
+        </div>
+        <div style="margin-top: 10px;">© <span id="footerYear"></span> Trucker Benefit. All rights reserved.</div>
+        <div class="site-footer-disclaimer">
+            Trucker Benefit is a marketing service that connects truck drivers with licensed insurance professionals.
+            We are not an insurance company and we do not issue policies. Quotes are provided by independent licensed
+            agents in your state. Not affiliated with any government agency. Coverage availability and pricing
+            depend on age, health, state of residence, and underwriting. This site is not a substitute for professional
+            financial or insurance advice.
+        </div>
+    </footer>
+
+    <script>
+        // Footer year
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        // Cookie consent — banner appears once, choice is remembered.
+        function setConsent(choice) {
+            localStorage.setItem("tb_consent", choice);
+            document.getElementById("cookieBanner").classList.remove("show");
+            trackEvent("consent_" + choice);
+        }
+        function openCookieBanner() {
+            document.getElementById("cookieBanner").classList.add("show");
+        }
+        // Show banner if no choice yet.
+        if (!localStorage.getItem("tb_consent")) {
+            setTimeout(() => document.getElementById("cookieBanner").classList.add("show"), 1200);
+        }
+    </script>
+
+    <!-- Hidden admin dashboard — open via index.html#admin + passcode -->
+    <div class="admin-dashboard" id="adminDashboard" style="display:none;"></div>
+</body>
+</html>

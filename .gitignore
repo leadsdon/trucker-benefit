@@ -1,0 +1,16 @@
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Local env / secrets — never commit these
+.env
+.env.local
+.env.*.local
+
+# Local server logs
+*.log
+
+# Vercel local cache (created if you use the Vercel CLI later)
+.vercel
