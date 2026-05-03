@@ -2051,13 +2051,17 @@
 
         // ─── ANALYTICS + LEADS ─────────────────────────────────────────────
         // Configure these for production:
-        //  - LEAD_WEBHOOK_URL: paste a Zapier / Make / your-own webhook URL.
-        //    The page will POST every lead and every event there as JSON.
-        //    Leave blank to use only localStorage (good for local testing).
-        //  - ADMIN_PASSCODE: change this. Reachable at index.html#admin.
-        //    Note: this passcode is in client-side JS, so anyone reading the
-        //    source can find it. Use a real auth backend for production.
+        //  - LEAD_WEBHOOK_URL: paste your Apps Script Web App URL (ends in /exec).
+        //    The page POSTs every lead + event there as JSON.
+        //    The admin dashboard ALSO fetches from this URL (with token) to
+        //    show cross-device leads.
+        //  - ADMIN_REMOTE_TOKEN: must match the ADMIN_TOKEN inside the Apps
+        //    Script. Used as ?token= when fetching remote data.
+        //  - ADMIN_PASSCODE: gates entry to the dashboard at index.html#admin.
+        //    Note: this passcode is in client-side JS — anyone reading the
+        //    source can find it. Acceptable for early testing.
         const LEAD_WEBHOOK_URL = "";
+        const ADMIN_REMOTE_TOKEN = "";
         const ADMIN_PASSCODE = "trucker2025";
 
         const ANALYTICS_KEY = "tb_analytics_v1";
@@ -2192,7 +2196,8 @@
             if (LEAD_WEBHOOK_URL) {
                 fetch(LEAD_WEBHOOK_URL, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    // text/plain avoids CORS preflight, which Apps Script doesn't handle.
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ kind: "event", ...evt }),
                     keepalive: true
                 }).catch(() => {});
@@ -2233,7 +2238,7 @@
             if (LEAD_WEBHOOK_URL) {
                 fetch(LEAD_WEBHOOK_URL, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify({ kind: "lead", ...record }),
                     keepalive: true
                 }).catch(() => {});
@@ -2820,6 +2825,69 @@
             adminRefreshTimer = setInterval(renderAdminDashboard, 15000);
         }
 
+        // Fetch remote leads + events from the Apps Script backend.
+        // Cached on the dashboard instance so we don't refetch on every filter change.
+        let _remoteCache = null;
+        let _remoteCacheTs = 0;
+        let _remoteStatus = "idle"; // idle | loading | ok | error | not_configured
+        let _remoteError = null;
+
+        async function fetchRemoteData(force) {
+            if (!LEAD_WEBHOOK_URL || !ADMIN_REMOTE_TOKEN) {
+                _remoteStatus = "not_configured";
+                return null;
+            }
+            // 12s freshness cache
+            if (!force && _remoteCache && Date.now() - _remoteCacheTs < 12000) {
+                return _remoteCache;
+            }
+            _remoteStatus = "loading";
+            try {
+                const url = LEAD_WEBHOOK_URL + (LEAD_WEBHOOK_URL.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(ADMIN_REMOTE_TOKEN);
+                const res = await fetch(url, { method: "GET" });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                _remoteCache = data;
+                _remoteCacheTs = Date.now();
+                _remoteStatus = "ok";
+                return data;
+            } catch (err) {
+                _remoteStatus = "error";
+                _remoteError = String(err);
+                return null;
+            }
+        }
+
+        // Normalize a remote row (from the Sheet — flat columns) back into the
+        // shape the dashboard expects (nested userData / first_touch / answers).
+        function unflattenRow(row) {
+            const out = { userData: {}, first_touch: {}, last_touch: {}, tcpa_consent: {} };
+            Object.keys(row || {}).forEach(k => {
+                const v = row[k];
+                if (k.indexOf("userData_") === 0) out.userData[k.slice(9)] = v;
+                else if (k.indexOf("first_touch_") === 0) out.first_touch[k.slice(12)] = v;
+                else if (k.indexOf("last_touch_") === 0) out.last_touch[k.slice(11)] = v;
+                else if (k.indexOf("tcpa_consent_") === 0) out.tcpa_consent[k.slice(13)] = v;
+                else if (k === "data") {
+                    try { out.data = JSON.parse(v); } catch (e) { out.data = v; }
+                }
+                else if (k === "answers") {
+                    try { out.answers = JSON.parse(v); } catch (e) { out.answers = []; }
+                }
+                else out[k] = v;
+            });
+            // Normalize timestamp fields the dashboard reads.
+            if (typeof out.savedAtTs !== "number" && out.savedAt) {
+                out.savedAtTs = new Date(out.savedAt).getTime();
+            }
+            if (typeof out.ts !== "number") {
+                if (out.received_at) out.ts = new Date(out.received_at).getTime();
+                else if (out.savedAtTs) out.ts = out.savedAtTs;
+            }
+            return out;
+        }
+
         function closeAdmin() {
             document.getElementById("adminDashboard").style.display = "none";
             document.body.classList.remove("admin-open");
@@ -2868,13 +2936,28 @@
             return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
         }
 
-        function renderAdminDashboard() {
+        async function renderAdminDashboard() {
             const dash = document.getElementById("adminDashboard");
             dash.style.display = "block";
             document.body.classList.add("admin-open");
 
-            const allEvents = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
-            const allLeads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+            // Try remote first; fall back to localStorage.
+            const remote = await fetchRemoteData(false);
+            const localEvents = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
+            const localLeads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+
+            let allEvents, allLeads, dataSource;
+            if (remote && (remote.events || remote.leads)) {
+                allEvents = (remote.events || []).map(unflattenRow);
+                allLeads = (remote.leads || []).map(unflattenRow);
+                dataSource = "remote (Sheet)";
+            } else {
+                allEvents = localEvents;
+                allLeads = localLeads;
+                dataSource = _remoteStatus === "not_configured"
+                    ? "localStorage (this device only — webhook not configured)"
+                    : "localStorage (remote fetch failed: " + (_remoteError || "unknown") + ")";
+            }
 
             // Apply cohort filters
             const cutoff = windowStartTs(adminFilter.window);
@@ -3043,7 +3126,8 @@
                 <div class="admin-topbar">
                     <h1>📊 Admin · <span style="color:#FFB800">Trucker Benefit</span></h1>
                     <div class="admin-topbar-actions">
-                        <span class="admin-session">Visitor: <code>${VISITOR_ID}</code></span>
+                        <span class="admin-session">Source: <code>${dataSource}</code></span>
+                        <button onclick="fetchRemoteData(true).then(renderAdminDashboard)">↻ Refresh</button>
                         <button onclick="closeAdmin()">Close</button>
                     </div>
                 </div>
@@ -3123,7 +3207,10 @@
         }
 
         function exportLeadsCSV() {
-            const leads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
+            const remoteLeads = (_remoteCache && _remoteCache.leads) ? _remoteCache.leads.map(unflattenRow) : null;
+            const leads = remoteLeads && remoteLeads.length
+                ? remoteLeads
+                : JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
             if (!leads.length) { alert("No leads to export."); return; }
             const headers = [
                 "savedAt", "status", "visitor", "session", "source", "device",
@@ -3145,7 +3232,10 @@
         }
 
         function exportEventsJSON() {
-            const events = localStorage.getItem(ANALYTICS_KEY) || "[]";
+            const remoteEvents = (_remoteCache && _remoteCache.events) ? _remoteCache.events : null;
+            const events = remoteEvents && remoteEvents.length
+                ? JSON.stringify(remoteEvents, null, 2)
+                : (localStorage.getItem(ANALYTICS_KEY) || "[]");
             downloadFile(events, "trucker-benefit-events.json", "application/json");
         }
 
