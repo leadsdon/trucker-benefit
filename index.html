@@ -2045,6 +2045,35 @@
         let quizCompleted = false;
         let questionStartTs = 0;
 
+        // Slug for each question — used to flatten answers into Sheet columns.
+        // Headers in your Sheet will look like: q1_trucker_status, q2_family_future, ...
+        const QUESTION_SLUGS = {
+            1: "trucker_status",
+            2: "family_future",
+            3: "monthly_finances",
+            4: "cost_stress",
+            5: "biggest_fear",
+            6: "protection_fear",
+            7: "looking_for",
+            8: "first_name",
+            9: "dob",
+            10: "email",
+            11: "phone",
+            12: "income",
+            13: "zip"
+        };
+
+        function answersToFlatColumns(answersArray) {
+            const flat = {};
+            (answersArray || []).forEach(a => {
+                const q = questions[a.question];
+                if (!q) return;
+                const slug = QUESTION_SLUGS[q.number] || ("q" + q.number);
+                flat["q" + q.number + "_" + slug] = a.answer;
+            });
+            return flat;
+        }
+
         // Replace this with the actual call number you want leads dialing.
         const CALL_NOW_NUMBER = "(555) 123-4567";
         const CALL_NOW_TEL = "+15551234567";
@@ -2213,8 +2242,13 @@
             // automatically; we just read its value.
             const tfInput = document.querySelector('input[name="xxTrustedFormCertUrl"]');
             const trustedFormCert = tfInput ? tfInput.value : null;
+
+            // Flatten quiz answers into per-question columns (q1_trucker_status, q2_family_future, etc.)
+            const quizColumns = answersToFlatColumns(lead.answers);
+
             const record = {
                 ...lead,
+                ...quizColumns,
                 visitor: VISITOR_ID,
                 session: SESSION_ID,
                 source: ATTRIBUTION.source,
