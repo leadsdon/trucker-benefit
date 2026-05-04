@@ -38,10 +38,15 @@
         })(window, document, "clarity", "script", window.TB_CONFIG.CLARITY_PROJECT_ID);
     </script>
 
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code — only fires if there's a real pending lead (i.e. the
+         user actually completed the quiz). Direct visits to /thank-you.html
+         never fire any pixel event, preventing inflated conversion counts. -->
     <script>
     (function(){
         if (!_isConfigured(window.TB_CONFIG.META_PIXEL_ID)) return;
+        try {
+            if (!sessionStorage.getItem("tb_pending_lead")) return;
+        } catch (e) { return; }
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
         n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -54,9 +59,8 @@
         fbq('track', 'PageView');
     })();
     </script>
-    <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=1589839658777765&ev=PageView&noscript=1"
-    /></noscript>
+    <!-- (No noscript fallback here — direct visits w/ JS disabled would otherwise
+         fire a spurious PageView. Real conversions need JS to run anyway.) -->
     <!-- End Meta Pixel Code -->
 
     <!-- Google Analytics 4 + Google Ads -->
@@ -402,9 +406,14 @@
             catch (e) { return null; }
         })();
 
-        // If someone landed here directly (no quiz completed), bounce home.
+        // If someone landed here directly (no quiz completed) — bot, share,
+        // refresh after pixels already fired, etc — bounce home AND HALT.
+        // Without the throw, JS keeps executing below and fires Lead events,
+        // inflating Meta's conversion count. Caught it: a 6:1 ratio between
+        // Meta-reported leads and Sheet-saved leads in our first test run.
         if (!TY_PENDING) {
             location.replace("/");
+            throw new Error("no_pending_lead");
         }
 
         // Replace placeholders with actual lead data
