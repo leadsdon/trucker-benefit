@@ -24,7 +24,9 @@
             GOOGLE_ADS_ID: "AW-XXXXXXXXXX",                     // ads.google.com (only if running Google Ads)
             GOOGLE_ADS_LEAD_LABEL: "XXXXXXXXXX",                // conversion label for Lead
             GOOGLE_ADS_CALL_LABEL: "XXXXXXXXXX",                // conversion label for Phone Call
-            TRUSTEDFORM_ENABLED: true                           // free script; cert retrieval is paid
+            TRUSTEDFORM_ENABLED: true,                          // free script; cert retrieval is paid
+            LEAD_WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec",
+            ADMIN_REMOTE_TOKEN: "REPLACE_WITH_A_LONG_RANDOM_STRING_AARON_WILL_NEVER_GUESS_LOL_XOXO"
         };
         const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
     </script>
@@ -2101,8 +2103,9 @@
         //  - ADMIN_PASSCODE: gates entry to the dashboard at index.html#admin.
         //    Note: this passcode is in client-side JS — anyone reading the
         //    source can find it. Acceptable for early testing.
-        const LEAD_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec";
-        const ADMIN_REMOTE_TOKEN = "REPLACE_WITH_A_LONG_RANDOM_STRING_AARON_WILL_NEVER_GUESS_LOL_XOXO";
+        // Sourced from TB_CONFIG (defined in <head>) so /thank-you.html shares them.
+        const LEAD_WEBHOOK_URL = window.TB_CONFIG.LEAD_WEBHOOK_URL;
+        const ADMIN_REMOTE_TOKEN = window.TB_CONFIG.ADMIN_REMOTE_TOKEN;
         const ADMIN_PASSCODE = "trucker2025";
 
         const ANALYTICS_KEY = "tb_analytics_v1";
@@ -2674,171 +2677,34 @@
         ];
 
         function showResults() {
-            console.log('Quiz Answers:', answers, 'User:', userData);
             trackEvent("quiz_completed");
-            fireConversion("Lead", { content_name: "Quiz Complete", value: 1, currency: "USD" });
-            fireConversion("CompleteRegistration");
             saveLead({ status: "complete", userData, answers, tcpa_consent: userData.tcpa_consent });
 
-            document.querySelector('.progress-bar').style.display = 'none';
-            document.getElementById('phaseIndicator').style.display = 'none';
-            document.getElementById('questionsContainer').style.display = 'none';
+            // Stash the lead so /thank-you.html can render personalized content
+            // and fire conversion pixels with the right URL for CAPI dedup.
+            try {
+                sessionStorage.setItem("tb_pending_lead", JSON.stringify({
+                    userData,
+                    answers,
+                    visitor: VISITOR_ID,
+                    session: SESSION_ID,
+                    source: ATTRIBUTION.source,
+                    first_touch: ATTRIBUTION.first,
+                    savedAtTs: Date.now()
+                }));
+            } catch (e) {}
 
-            const resultsPage = document.getElementById('resultsPage');
-            resultsPage.classList.add('active');
-
-            const name = (userData.firstName || '').trim();
-            const greet = name ? name.toUpperCase() : 'YOU';
-
-            resultsPage.innerHTML = `
-                <div class="loading-screen">
-                    <div class="spinner"></div>
-                    <h2 class="loading-title">Loading personalized plan for <span class="loading-name">${greet}</span>…</h2>
-                    <div class="loading-steps" id="loadingSteps">
-                        <div class="loading-step active">✓ Analyzing your answers</div>
-                        <div class="loading-step">✓ Matching you with 60+ A-rated carriers</div>
-                        <div class="loading-step">✓ Calculating your eligible coverage</div>
-                    </div>
-                    <div class="testimonial-rotator" id="testimonialRotator"></div>
-                </div>
-            `;
-
-            const quiz = document.getElementById('quizEmbed');
-            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            const rotator = document.getElementById('testimonialRotator');
-            const renderTestimonial = (i) => {
-                const t = TESTIMONIALS[i];
-                rotator.innerHTML = `
-                    <div class="testimonial">
-                        <div class="testimonial-quote">"${t.quote}"</div>
-                        <div class="testimonial-attr">— ${t.name}, ${t.role}</div>
-                    </div>
-                `;
-            };
-            renderTestimonial(0);
-
-            let i = 0;
-            const interval = setInterval(() => {
-                i = (i + 1) % TESTIMONIALS.length;
-                renderTestimonial(i);
-            }, 2200);
-
-            const steps = document.querySelectorAll('#loadingSteps .loading-step');
-            setTimeout(() => steps[1] && steps[1].classList.add('active'), 2000);
-            setTimeout(() => steps[2] && steps[2].classList.add('active'), 4200);
-
-            setTimeout(() => {
-                clearInterval(interval);
-                showIULRecommendation();
-            }, 6800);
-        }
-
-        function showIULRecommendation() {
+            // Hand control to /thank-you.html — that page fires Lead /
+            // CompleteRegistration / Google Ads conversion + renders the IUL match.
             unlockQuiz();
-            trackEvent("iul_revealed");
-            const resultsPage = document.getElementById('resultsPage');
-            const name = (userData.firstName || '').trim();
-            const greet = name ? `${name},` : '';
-
-            resultsPage.innerHTML = `
-                <div class="iul-reveal">
-                    <div class="iul-badge">YOUR BEST MATCH</div>
-                    <h2 class="iul-headline">Indexed Universal Life (IUL)</h2>
-                    <p class="iul-tagline">${greet} based on your answers, this is the strongest fit for you.</p>
-
-                    <div class="iul-benefits">
-                        <div class="iul-benefit"><strong>Pays you while alive.</strong> Heart attack, cancer, stroke, or disability — you get the money when you need it, not just when you die.</div>
-                        <div class="iul-benefit"><strong>Tax-free growth.</strong> Cash value compounds over time and can be accessed tax-free.</div>
-                        <div class="iul-benefit"><strong>Locked-in rates.</strong> Today's age = today's price, for life.</div>
-                        <div class="iul-benefit"><strong>Built for truckers.</strong> Designed around the unique health and income realities of CDL drivers.</div>
-                    </div>
-
-                    <a href="tel:${CALL_NOW_TEL}" class="call-now-button iul-call-now" onclick="trackEvent('call_clicked', { from: 'iul_screen' }); fireConversion('Contact', { value: 1, currency: 'USD' });">
-                        📞 CALL NOW: ${CALL_NOW_NUMBER}
-                    </a>
-                    <p class="iul-call-sub">Talk to a Trucker Benefit Specialist now to explore your options. Free 15-min consult.</p>
-
-                    <p class="iul-disclaimer">No cost · No obligation · Licensed agents standing by</p>
-
-                    <div class="share-card">
-                        <div class="share-card-icon">🤝</div>
-                        <h3 class="share-card-title">Help a fellow trucker</h3>
-                        <p class="share-card-sub">Most CDL drivers don't know this coverage exists. Send a friend the same free assessment — could save their family.</p>
-                        <button class="share-card-button" onclick="shareWithFriend()">
-                            📲 SHARE WITH A TRUCKER FRIEND
-                        </button>
-                        <p class="share-card-fineprint">Opens your messages with a pre-filled note — pick the friend, hit send.</p>
-                    </div>
-                </div>
-            `;
-            const quiz = document.getElementById('quizEmbed');
-            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            location.href = "/thank-you.html";
         }
 
-        function showCallNow() {
-            unlockQuiz();
-            const resultsPage = document.getElementById('resultsPage');
-            const name = (userData.firstName || '').trim();
-            const greet = name ? `${name}, your` : 'Your';
+        // showIULRecommendation, showCallNow, and shareWithFriend used to live
+        // here. They moved to /thank-you.html so the URL changes on conversion,
+        // letting Meta Pixel + GA4 + Google Ads + future CAPI events fire on a
+        // distinct page URL.
 
-            resultsPage.innerHTML = `
-                <div class="call-now-screen">
-                    <div class="call-now-badge">⚡ ACT NOW — RATES LOCK AT TODAY'S AGE</div>
-                    <h2 class="call-now-headline">${greet} plan is ready.</h2>
-                    <p class="call-now-sub">Tap the number below to talk to a Trucker Benefit Specialist and lock in your IUL coverage. Most calls take under 15 minutes.</p>
-
-                    <a href="tel:${CALL_NOW_TEL}" class="call-now-button" onclick="trackEvent('call_clicked', { from: 'call_now_screen' }); fireConversion('Contact', { value: 1, currency: 'USD' });">
-                        📞 CALL NOW: ${CALL_NOW_NUMBER}
-                    </a>
-
-                    <div class="call-now-trust">
-                        <div>✓ Free consult — no cost, no obligation</div>
-                        <div>✓ Licensed agents standing by</div>
-                        <div>✓ Quote in under 15 minutes</div>
-                    </div>
-
-                    <p class="call-now-fineprint">Can't talk now? We'll also email and call you back at ${userData.phone || 'your number'}.</p>
-
-                    <div class="share-card">
-                        <div class="share-card-icon">🤝</div>
-                        <h3 class="share-card-title">Help a fellow trucker</h3>
-                        <p class="share-card-sub">Most CDL drivers don't know this coverage exists. Send a friend the same free assessment — could save their family.</p>
-                        <button class="share-card-button" onclick="shareWithFriend()">
-                            📲 SHARE WITH A TRUCKER FRIEND
-                        </button>
-                        <p class="share-card-fineprint">Opens your messages with a pre-filled note — pick the friend, hit send.</p>
-                    </div>
-                </div>
-            `;
-
-            const quiz = document.getElementById('quizEmbed');
-            if (quiz) quiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        async function shareWithFriend() {
-            trackEvent("share_clicked");
-            const url = 'https://truckerbenefit.com';
-            const text = "Hey — just took this 60-second assessment for trucker financial protection. Worth checking out, free and no pressure: ";
-            const shareData = {
-                title: 'Free Financial Plan for Truckers',
-                text: text,
-                url: url
-            };
-
-            if (navigator.share) {
-                try {
-                    await navigator.share(shareData);
-                    return;
-                } catch (e) {
-                    // user cancelled or share failed — fall through to SMS
-                }
-            }
-            // Fallback: open SMS composer pre-filled.
-            const body = encodeURIComponent(text + url);
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            window.location.href = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
-        }
         function scrollToQuiz() {
             const quiz = document.getElementById('quizEmbed');
             if (!quiz) return;

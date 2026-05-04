@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Plan Is Ready — Trucker Benefit</title>
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="apple-touch-icon" href="/favicon.svg">
+    <meta name="theme-color" content="#FF6B35">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         CONFIG — must match /index.html. Both pages share TB_CONFIG.
+         ════════════════════════════════════════════════════════════════════ -->
+    <script>
+        window.TB_CONFIG = {
+            CLARITY_PROJECT_ID: "YOUR_CLARITY_PROJECT_ID",
+            META_PIXEL_ID: "1589839658777765",
+            GA4_MEASUREMENT_ID: "G-XXXXXXXXXX",
+            GOOGLE_ADS_ID: "AW-XXXXXXXXXX",
+            GOOGLE_ADS_LEAD_LABEL: "XXXXXXXXXX",
+            GOOGLE_ADS_CALL_LABEL: "XXXXXXXXXX",
+            TRUSTEDFORM_ENABLED: true,
+            LEAD_WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec"
+        };
+        const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
+    </script>
+
+    <!-- Microsoft Clarity -->
+    <script>
+        (function(c,l,a,r,i,t,y){
+            if (!_isConfigured(i)) return;
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", window.TB_CONFIG.CLARITY_PROJECT_ID);
+    </script>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    (function(){
+        if (!_isConfigured(window.TB_CONFIG.META_PIXEL_ID)) return;
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', window.TB_CONFIG.META_PIXEL_ID);
+        fbq('track', 'PageView');
+    })();
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=1589839658777765&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
+
+    <!-- Google Analytics 4 + Google Ads -->
+    <script>
+        (function() {
+            const ga = window.TB_CONFIG.GA4_MEASUREMENT_ID;
+            const ads = window.TB_CONFIG.GOOGLE_ADS_ID;
+            if (!_isConfigured(ga) && !_isConfigured(ads)) return;
+            const id = _isConfigured(ga) ? ga : ads;
+            const s = document.createElement('script');
+            s.async = true;
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+            document.head.appendChild(s);
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function(){ dataLayer.push(arguments); };
+            gtag('js', new Date());
+            if (_isConfigured(ga))  gtag('config', ga);
+            if (_isConfigured(ads)) gtag('config', ads);
+        })();
+    </script>
+
+    <!-- TrustedForm -->
+    <script>
+        (function() {
+            if (!window.TB_CONFIG.TRUSTEDFORM_ENABLED) return;
+            const tf = document.createElement('script');
+            tf.type = 'text/javascript';
+            tf.async = true;
+            tf.src = (location.protocol === 'https:' ? 'https' : 'http') +
+                '://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&ping_field=xxTrustedFormPingUrl&l=' +
+                Date.now() + Math.random();
+            const s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(tf, s);
+        })();
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #FF6B35;
+            --secondary: #004E89;
+            --dark: #1A1A2E;
+            --light: #F5F5F5;
+            --accent: #FFB800;
+            --text: #2D2D2D;
+        }
+        body {
+            font-family: 'Archivo', sans-serif;
+            background: #1A1A2E;
+            color: #fff;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px 16px 60px;
+        }
+
+        .ty-wrap {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .ty-card {
+            background: #fff;
+            color: var(--dark);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 44px 36px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .ty-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        /* Loading screen (shown briefly while pixels fire) */
+        .ty-loading {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .ty-spinner {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 24px;
+            border: 5px solid rgba(255, 107, 53, 0.15);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: ty-spin 0.9s linear infinite;
+        }
+        @keyframes ty-spin { to { transform: rotate(360deg); } }
+
+        .ty-loading h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 30px;
+            color: var(--dark);
+            letter-spacing: 1px;
+            line-height: 1.15;
+            margin-bottom: 6px;
+        }
+        .ty-loading-name { color: var(--primary); }
+
+        .ty-loading-steps {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin: 22px 0 28px;
+        }
+        .ty-loading-step {
+            font-size: 14px;
+            color: #999;
+            font-weight: 500;
+            opacity: 0.4;
+            transition: all 0.4s ease;
+        }
+        .ty-loading-step.active { color: var(--secondary); opacity: 1; }
+
+        /* Results — IUL match */
+        .ty-results { display: none; }
+        .ty-results.active { display: block; }
+
+        .ty-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--dark);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            padding: 7px 16px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+
+        .ty-headline {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 44px;
+            color: var(--dark);
+            line-height: 1.05;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .ty-tagline {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+
+        .ty-benefits {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            margin: 0 auto 28px;
+        }
+
+        .ty-benefit {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 14px 18px;
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        .ty-benefit strong { color: var(--dark); }
+
+        /* Big call button */
+        .ty-call {
+            display: block;
+            text-align: center;
+            background: linear-gradient(135deg, #1FAE57, #2BC76A);
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28px;
+            letter-spacing: 1.5px;
+            padding: 22px 16px;
+            border-radius: 14px;
+            box-shadow: 0 14px 35px rgba(31, 174, 87, 0.35);
+            animation: ty-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes ty-pulse { 50% { transform: scale(1.02); } }
+
+        .ty-call-sub {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            text-align: center;
+            margin: 12px 0 6px;
+        }
+        .ty-disclaimer {
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        /* Share */
+        .ty-share {
+            margin-top: 28px;
+            background: linear-gradient(135deg, rgba(0, 78, 137, 0.08), rgba(255, 184, 0, 0.06));
+            border: 2px dashed var(--secondary);
+            border-radius: 14px;
+            padding: 24px 20px;
+            text-align: center;
+        }
+        .ty-share-icon { font-size: 32px; margin-bottom: 4px; }
+        .ty-share h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 26px;
+            color: var(--dark);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .ty-share p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .ty-share button {
+            background: linear-gradient(135deg, var(--secondary), #0066B3);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 22px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            cursor: pointer;
+        }
+        .ty-share-fineprint {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Trust list */
+        .ty-trust {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+            margin: 14px 0 6px;
+            text-align: center;
+        }
+
+        /* Footer */
+        .ty-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+        }
+        .ty-footer a { color: rgba(255,255,255,0.75); text-decoration: underline; margin: 0 6px; }
+
+        @media (max-width: 600px) {
+            .ty-card { padding: 28px 22px; }
+            .ty-headline { font-size: 34px; }
+            .ty-call { font-size: 22px; padding: 18px 14px; }
+            .ty-loading h2 { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ty-wrap">
+        <div class="ty-card">
+            <!-- Brief loading flourish so the page feels intentional -->
+            <div class="ty-loading" id="tyLoading">
+                <div class="ty-spinner"></div>
+                <h2>Locking in your plan, <span class="ty-loading-name" id="tyLoadingName">…</span></h2>
+                <div class="ty-loading-steps">
+                    <div class="ty-loading-step active">✓ Saving your assessment</div>
+                    <div class="ty-loading-step" id="tyStep2">✓ Matching with 60+ A-rated carriers</div>
+                    <div class="ty-loading-step" id="tyStep3">✓ Calculating eligible coverage</div>
+                </div>
+            </div>
+
+            <!-- Results — revealed after ~2.5s -->
+            <div class="ty-results" id="tyResults">
+                <div style="text-align:center;">
+                    <div class="ty-badge">YOUR BEST MATCH</div>
+                    <h1 class="ty-headline">Indexed Universal Life (IUL)</h1>
+                    <p class="ty-tagline" id="tyTagline">Based on your answers, this is the strongest fit for you.</p>
+                </div>
+
+                <div class="ty-benefits">
+                    <div class="ty-benefit"><strong>Pays you while alive.</strong> Heart attack, cancer, stroke, or disability — you get the money when you need it, not just when you die.</div>
+                    <div class="ty-benefit"><strong>Tax-free growth.</strong> Cash value compounds over time and can be accessed tax-free.</div>
+                    <div class="ty-benefit"><strong>Locked-in rates.</strong> Today's age = today's price, for life.</div>
+                    <div class="ty-benefit"><strong>Built for truckers.</strong> Designed around the unique health and income realities of CDL drivers.</div>
+                </div>
+
+                <a href="tel:+15551234567" class="ty-call" id="tyCallBtn">
+                    📞 CALL NOW: (555) 123-4567
+                </a>
+                <p class="ty-call-sub">Talk to a Trucker Benefit Specialist now to explore your options. Free 15-min consult.</p>
+
+                <div class="ty-trust">
+                    <div>✓ Free consult — no cost, no obligation</div>
+                    <div>✓ Licensed agents standing by</div>
+                    <div>✓ Quote in under 15 minutes</div>
+                </div>
+
+                <p class="ty-disclaimer" id="tyCallback"></p>
+
+                <div class="ty-share">
+                    <div class="ty-share-icon">🤝</div>
+                    <h3>Help a fellow trucker</h3>
+                    <p>Most CDL drivers don't know this coverage exists. Send a friend the same free assessment — could save their family.</p>
+                    <button onclick="shareWithFriend()">📲 SHARE WITH A TRUCKER FRIEND</button>
+                    <p class="ty-share-fineprint">Opens your messages with a pre-filled note — pick the friend, hit send.</p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="ty-footer">
+            <div>
+                <a href="/">Home</a> ·
+                <a href="/privacy.html">Privacy</a> ·
+                <a href="/terms.html">Terms</a>
+            </div>
+            <div style="margin-top: 8px;">© <span id="tyYear"></span> Trucker Benefit. All rights reserved.</div>
+        </footer>
+    </div>
+
+    <script>
+        // ─── Read pending lead from sessionStorage ─────────────────────────
+        const TY_PENDING = (() => {
+            try { return JSON.parse(sessionStorage.getItem("tb_pending_lead") || "null"); }
+            catch (e) { return null; }
+        })();
+
+        // If someone landed here directly (no quiz completed), bounce home.
+        if (!TY_PENDING) {
+            location.replace("/");
+        }
+
+        // Replace placeholders with actual lead data
+        const TY_NAME = (TY_PENDING && TY_PENDING.userData && TY_PENDING.userData.firstName)
+            ? String(TY_PENDING.userData.firstName).trim() : "";
+        const TY_PHONE = (TY_PENDING && TY_PENDING.userData && TY_PENDING.userData.phone) || "";
+        const TY_VISITOR = (TY_PENDING && TY_PENDING.visitor) || "";
+        const TY_SESSION = (TY_PENDING && TY_PENDING.session) || "";
+        const TY_SOURCE = (TY_PENDING && TY_PENDING.source) || "direct";
+
+        // Personalize the loading + tagline
+        document.getElementById("tyLoadingName").textContent = TY_NAME ? TY_NAME.toUpperCase() : "YOU";
+        if (TY_NAME) {
+            document.getElementById("tyTagline").textContent =
+                TY_NAME + ", based on your answers, this is the strongest fit for you.";
+        }
+        if (TY_PHONE) {
+            document.getElementById("tyCallback").textContent =
+                "Can't talk now? We'll also call you at " + TY_PHONE + ".";
+        }
+
+        // Replace these with your real call number — they should match index.html.
+        const CALL_NOW_NUMBER = "(555) 123-4567";
+        const CALL_NOW_TEL = "+15551234567";
+        const callBtn = document.getElementById("tyCallBtn");
+        callBtn.href = "tel:" + CALL_NOW_TEL;
+        callBtn.textContent = "📞 CALL NOW: " + CALL_NOW_NUMBER;
+
+        // ─── Conversion firing ─────────────────────────────────────────────
+        // Each event has a stable event_id so the server-side Conversions API
+        // (when you wire that up later) can dedupe with these browser events.
+        function genEventId() {
+            return "ev_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+        }
+        const LEAD_EVENT_ID = genEventId();
+
+        const consent = localStorage.getItem("tb_consent");
+        const allowPixels = consent !== "declined";
+
+        if (allowPixels && window.fbq) {
+            try {
+                fbq("track", "Lead", {
+                    content_name: "Quiz Complete",
+                    value: 1,
+                    currency: "USD"
+                }, { eventID: LEAD_EVENT_ID });
+                fbq("track", "CompleteRegistration", {}, { eventID: LEAD_EVENT_ID + "_reg" });
+            } catch (e) {}
+        }
+
+        if (allowPixels && window.gtag) {
+            try {
+                if (_isConfigured(window.TB_CONFIG.GA4_MEASUREMENT_ID)) {
+                    gtag("event", "generate_lead", { value: 1, currency: "USD" });
+                }
+                if (_isConfigured(window.TB_CONFIG.GOOGLE_ADS_ID) && _isConfigured(window.TB_CONFIG.GOOGLE_ADS_LEAD_LABEL)) {
+                    gtag("event", "conversion", {
+                        send_to: window.TB_CONFIG.GOOGLE_ADS_ID + "/" + window.TB_CONFIG.GOOGLE_ADS_LEAD_LABEL,
+                        value: 1, currency: "USD"
+                    });
+                }
+            } catch (e) {}
+        }
+
+        // ─── Track thank-you-page view to your backend ─────────────────────
+        function postEvent(name, data) {
+            const url = window.TB_CONFIG.LEAD_WEBHOOK_URL;
+            if (!url) return;
+            try {
+                fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        kind: "event",
+                        name: name,
+                        data: data || {},
+                        ts: Date.now(),
+                        visitor: TY_VISITOR,
+                        session: TY_SESSION,
+                        source: TY_SOURCE,
+                        path: location.pathname,
+                        event_id: LEAD_EVENT_ID,
+                        url: location.href,
+                        referrer: document.referrer || ""
+                    }),
+                    keepalive: true
+                }).catch(() => {});
+            } catch (e) {}
+        }
+
+        postEvent("thank_you_view");
+        postEvent("conversion_lead", { event_id: LEAD_EVENT_ID });
+
+        // ─── Reveal results after a short loading flourish ────────────────
+        const step2 = document.getElementById("tyStep2");
+        const step3 = document.getElementById("tyStep3");
+        setTimeout(() => step2 && step2.classList.add("active"), 700);
+        setTimeout(() => step3 && step3.classList.add("active"), 1500);
+        setTimeout(() => {
+            document.getElementById("tyLoading").style.display = "none";
+            document.getElementById("tyResults").classList.add("active");
+        }, 2500);
+
+        // ─── Call-now click → fire Contact conversion ──────────────────────
+        callBtn.addEventListener("click", () => {
+            const callId = genEventId();
+            postEvent("call_clicked", { event_id: callId, from: "thank_you" });
+            if (allowPixels && window.fbq) {
+                try { fbq("track", "Contact", { value: 1, currency: "USD" }, { eventID: callId }); } catch (e) {}
+            }
+            if (allowPixels && window.gtag) {
+                try {
+                    if (_isConfigured(window.TB_CONFIG.GA4_MEASUREMENT_ID)) {
+                        gtag("event", "phone_call", { value: 1, currency: "USD" });
+                    }
+                    if (_isConfigured(window.TB_CONFIG.GOOGLE_ADS_ID) && _isConfigured(window.TB_CONFIG.GOOGLE_ADS_CALL_LABEL)) {
+                        gtag("event", "conversion", {
+                            send_to: window.TB_CONFIG.GOOGLE_ADS_ID + "/" + window.TB_CONFIG.GOOGLE_ADS_CALL_LABEL,
+                            value: 1, currency: "USD"
+                        });
+                    }
+                } catch (e) {}
+            }
+        });
+
+        // ─── Share button ─────────────────────────────────────────────────
+        async function shareWithFriend() {
+            postEvent("share_clicked");
+            const url = "https://truckerbenefit.com";
+            const text = "Hey — just took this 60-second assessment for trucker financial protection. Worth checking out, free and no pressure: ";
+            const shareData = { title: "Free Financial Plan for Truckers", text, url };
+            if (navigator.share) {
+                try { await navigator.share(shareData); return; } catch (e) {}
+            }
+            const body = encodeURIComponent(text + url);
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            location.href = isIOS ? "sms:&body=" + body : "sms:?body=" + body;
+        }
+
+        // Footer year
+        document.getElementById("tyYear").textContent = new Date().getFullYear();
+
+        // Don't let the user re-fire conversions by hitting refresh.
+        // Clear the pending lead once we've used it. (If they refresh, they go home.)
+        try { sessionStorage.removeItem("tb_pending_lead"); } catch (e) {}
+    </script>
+</body>
+</html>
