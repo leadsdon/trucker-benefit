@@ -72,3 +72,98 @@ If you ever want to change the script logic:
 4. The URL stays the same — no code changes needed on our side.
 
 If you skip step 3, your edits won't be live.
+
+---
+
+## Sharing leads with a buyer / client (Ringy + read-only sheet)
+
+Once you start selling these leads, you'll want two delivery channels:
+1. A **clean Google Sheet** with only buyer-facing columns (no UTMs, fbclid, scroll depth, internal IDs, etc.) — for record-keeping and audit.
+2. **Real-time push to Ringy** so the buyer's dialer gets the lead within seconds of submission.
+
+The Apps Script handles both automatically. Here's how to wire it up.
+
+### A. Update the Apps Script to its latest version
+
+The current `apps-script-backend.gs` (v2) writes to THREE tabs in your sheet:
+- `Leads` — your master with everything (unchanged)
+- `Events` — every event for the admin dashboard (unchanged)
+- `Client_Leads` — clean buyer-facing columns only (NEW)
+
+It also pushes each new lead to a Ringy webhook URL (NEW).
+
+To upgrade:
+1. Open your Apps Script editor (Extensions → Apps Script in your sheet).
+2. Replace the entire script with the latest contents of [`apps-script-backend.gs`](apps-script-backend.gs).
+3. Keep your existing `ADMIN_TOKEN` value.
+4. Save.
+5. **Deploy → Manage deployments → ✏️ → Version: New version → Deploy.** (Web app URL stays the same.)
+
+After the next lead comes in, a `Client_Leads` tab appears automatically with these columns:
+
+| Column | Source |
+|---|---|
+| Received | Server timestamp |
+| First Name | Quiz Q8 |
+| Phone | Quiz Q11 |
+| Email | Quiz Q10 |
+| DOB | Quiz Q9 |
+| Zip | Quiz Q13 |
+| Driver Type | Quiz Q1 |
+| Income | Quiz Q12 |
+| Source | Inferred from UTMs / click IDs / referrer |
+| Campaign | first_touch utm_campaign |
+| TrustedForm Cert | Independent consent proof URL |
+| TCPA Consent | Timestamp the user clicked through the consent text |
+| Lead ID | Internal visitor ID |
+
+To change which columns the buyer sees, edit `CLIENT_COLUMNS` at the top of the script.
+
+### B. Get a Ringy "Lead Drop URL" from your client
+
+1. In Ringy → **Lead Sources → New Source → Webhook** (the names sometimes change; look for "Lead Drop" or "Webhook URL").
+2. Configure the field mapping in Ringy. We send these exact field names — make sure they're mapped on Ringy's side:
+   ```
+   first_name
+   phone
+   email
+   date_of_birth
+   zip
+   income
+   driver_type
+   biggest_fear
+   looking_for
+   lead_source
+   utm_campaign
+   utm_source
+   fbclid
+   trustedform_cert_url
+   tcpa_consent_timestamp
+   notes
+   ```
+3. Ringy gives you a unique POST URL (something like `https://app.ringy.com/api/public/leads/new-lead/abc123def456`).
+4. Paste that URL into the Apps Script:
+   ```js
+   const RINGY_WEBHOOK_URL = "https://app.ringy.com/api/public/leads/new-lead/abc123def456";
+   ```
+5. Save → redeploy (Manage deployments → New version).
+
+### C. Give the client view-only access to clean leads
+
+Two clean approaches — pick whichever you prefer:
+
+**Option 1: Just share the master sheet, restrict to one tab.**
+- File → Share with the client's email, set to **Viewer**.
+- They open the sheet, click the `Client_Leads` tab. They can also see other tabs (Leads, Events) — not ideal.
+
+**Option 2 (recommended): A separate sheet that mirrors `Client_Leads` only.**
+- Create a brand new blank sheet (sheets.google.com → Blank). Name it something like `Trucker Benefit — Live Leads`.
+- In cell A1 paste:
+  ```
+  =IMPORTRANGE("PASTE_YOUR_MASTER_SHEET_URL_HERE", "Client_Leads!A:Z")
+  ```
+- Replace the URL with your master sheet's URL. The first time you run it, click **Allow access**.
+- Now this new sheet always reflects the `Client_Leads` tab in real time.
+- Share THIS new sheet with the client (Viewer access). They never see the master.
+
+If you have multiple clients buying leads, use option 2 with `=QUERY(IMPORTRANGE(...), "select * where Col10='source-they-bought'")` to filter per-source. Tell me when you reach that point and I'll set up the per-buyer filtering.
