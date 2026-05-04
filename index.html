@@ -2238,13 +2238,23 @@
             } catch (e) { /* storage may be full or blocked */ }
 
             if (LEAD_WEBHOOK_URL) {
-                fetch(LEAD_WEBHOOK_URL, {
-                    method: "POST",
+                const body = JSON.stringify({ kind: "event", ...evt });
+                let queued = false;
+                if (navigator.sendBeacon) {
+                    try {
+                        const blob = new Blob([body], { type: "text/plain;charset=utf-8" });
+                        queued = navigator.sendBeacon(LEAD_WEBHOOK_URL, blob);
+                    } catch (e) {}
+                }
+                if (!queued) {
                     // text/plain avoids CORS preflight, which Apps Script doesn't handle.
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ kind: "event", ...evt }),
-                    keepalive: true
-                }).catch(() => {});
+                    fetch(LEAD_WEBHOOK_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: body,
+                        keepalive: true
+                    }).catch(() => {});
+                }
             }
             if (window.clarity) {
                 try { window.clarity("event", name); } catch (e) {}
@@ -2285,12 +2295,24 @@
             } catch (e) {}
 
             if (LEAD_WEBHOOK_URL) {
-                fetch(LEAD_WEBHOOK_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({ kind: "lead", ...record }),
-                    keepalive: true
-                }).catch(() => {});
+                const body = JSON.stringify({ kind: "lead", ...record });
+                // sendBeacon is purpose-built to survive immediate page
+                // navigation — fetch+keepalive can race the redirect.
+                let queued = false;
+                if (navigator.sendBeacon) {
+                    try {
+                        const blob = new Blob([body], { type: "text/plain;charset=utf-8" });
+                        queued = navigator.sendBeacon(LEAD_WEBHOOK_URL, blob);
+                    } catch (e) {}
+                }
+                if (!queued) {
+                    fetch(LEAD_WEBHOOK_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: body,
+                        keepalive: true
+                    }).catch(() => {});
+                }
             }
         }
 
