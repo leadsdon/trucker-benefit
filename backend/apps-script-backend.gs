@@ -209,31 +209,42 @@ function writeClientRow(masterSS, flat) {
  * common defaults.
  */
 function pushToRingy(flat) {
-  // Fields the client receives. Match exactly what Ringy is mapped to expect.
+  // Ringy public lead-creation endpoint expects auth (sid + authToken) and
+  // the lead fields together in a single JSON body.
+  // https://app.ringy.com/api/public/leads/new-lead
   const payload = {
+    sid: RINGY_SID,
+    authToken: RINGY_AUTH_TOKEN,
+    // Ringy's canonical phone field is "phone_number", not "phone".
+    phone_number: flat.userData_phone || "",
     first_name: flat.userData_firstName || "",
-    phone: flat.userData_phone || "",
     email: flat.userData_email || "",
     date_of_birth: flat.userData_dob || "",
     zip: flat.userData_zip || "",
+    // Ringy custom fields — your client must create these in their Ringy
+    // account (Lead Sources → Custom Fields) for them to show up on the lead.
     income: flat.q12_income || "",
     driver_type: flat.q1_trucker_status || "",
     biggest_fear: flat.q5_biggest_fear || "",
     looking_for: flat.q7_looking_for || "",
     notes: LEAD_NOTES
   };
-  // If Ringy requires SID + auth_token, include them.
-  if (RINGY_SID) payload.sid = RINGY_SID;
-  if (RINGY_AUTH_TOKEN) payload.auth_token = RINGY_AUTH_TOKEN;
 
   try {
-    UrlFetchApp.fetch(RINGY_WEBHOOK_URL, {
+    const resp = UrlFetchApp.fetch(RINGY_WEBHOOK_URL, {
       method: "post",
       contentType: "application/json",
       payload: JSON.stringify(payload),
       muteHttpExceptions: true,
       followRedirects: true
     });
+    const code = resp.getResponseCode();
+    const text = resp.getContentText();
+    if (code >= 200 && code < 300) {
+      console.log("Ringy push ok:", code, text.slice(0, 200));
+    } else {
+      console.error("Ringy push non-2xx:", code, text.slice(0, 500));
+    }
   } catch (err) {
     // Don't fail the whole doPost if Ringy is down — the lead is still in the
     // sheets, you can review/forward later.
