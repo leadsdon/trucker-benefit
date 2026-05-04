@@ -2789,7 +2789,11 @@
             _remoteStatus = "loading";
             try {
                 const url = ADMIN_READ_URL + (ADMIN_READ_URL.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(ADMIN_REMOTE_TOKEN);
-                const res = await fetch(url, { method: "GET" });
+                // 8s timeout — Apps Script can stall, never hang the dashboard.
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const res = await fetch(url, { method: "GET", signal: controller.signal });
+                clearTimeout(timeoutId);
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
@@ -2799,7 +2803,8 @@
                 return data;
             } catch (err) {
                 _remoteStatus = "error";
-                _remoteError = String(err);
+                _remoteError = String(err && err.message || err);
+                console.warn("[admin] remote fetch failed:", _remoteError);
                 return null;
             }
         }
@@ -2881,13 +2886,36 @@
             return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
         }
 
-        async function renderAdminDashboard() {
+        function renderAdminDashboard() {
             const dash = document.getElementById("adminDashboard");
             dash.style.display = "block";
             document.body.classList.add("admin-open");
 
-            // Try remote first; fall back to localStorage.
-            const remote = await fetchRemoteData(false);
+            // Render immediately with whatever's already in cache (or
+            // localStorage). DO NOT block on the network — if Apps Script
+            // is slow/down, the dashboard still appears.
+            try { renderDashboardWithData(); } catch (err) {
+                console.error("[admin] render error:", err);
+                dash.innerHTML = `<div style="padding:40px;color:#FF6B6B;">
+                    <h1>Admin render error</h1>
+                    <p>${String(err && err.message || err)}</p>
+                    <button onclick="closeAdmin()">Close</button>
+                </div>`;
+            }
+
+            // Kick off a fresh remote fetch in the background; re-render when done.
+            fetchRemoteData(false).then(remote => {
+                if (remote) {
+                    try { renderDashboardWithData(); } catch (err) {
+                        console.error("[admin] re-render error:", err);
+                    }
+                }
+            });
+        }
+
+        function renderDashboardWithData() {
+            const dash = document.getElementById("adminDashboard");
+            const remote = _remoteCache;
             const localEvents = JSON.parse(localStorage.getItem(ANALYTICS_KEY) || "[]");
             const localLeads = JSON.parse(localStorage.getItem(LEADS_KEY) || "[]");
 
@@ -2899,9 +2927,15 @@
             } else {
                 allEvents = localEvents;
                 allLeads = localLeads;
-                dataSource = _remoteStatus === "not_configured"
-                    ? "localStorage (this device only — webhook not configured)"
-                    : "localStorage (remote fetch failed: " + (_remoteError || "unknown") + ")";
+                if (_remoteStatus === "loading") {
+                    dataSource = "localStorage (loading remote…)";
+                } else if (_remoteStatus === "not_configured") {
+                    dataSource = "localStorage (this device only — webhook not configured)";
+                } else if (_remoteStatus === "error") {
+                    dataSource = "localStorage (remote fetch failed: " + (_remoteError || "unknown") + ")";
+                } else {
+                    dataSource = "localStorage";
+                }
             }
 
             // Apply cohort filters
