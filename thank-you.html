@@ -23,7 +23,9 @@
             GOOGLE_ADS_LEAD_LABEL: "XXXXXXXXXX",
             GOOGLE_ADS_CALL_LABEL: "XXXXXXXXXX",
             TRUSTEDFORM_ENABLED: true,
-            LEAD_WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec"
+            // Posts go through our same-domain Vercel proxy → Apps Script
+            // (with retries). Survives ad-blockers and mobile redirects.
+            LEAD_WEBHOOK_URL: "/api/lead"
         };
         const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
     </script>

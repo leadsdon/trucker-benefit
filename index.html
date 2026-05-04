@@ -26,7 +26,14 @@
             GOOGLE_ADS_LEAD_LABEL: "XXXXXXXXXX",                // conversion label for Lead
             GOOGLE_ADS_CALL_LABEL: "XXXXXXXXXX",                // conversion label for Phone Call
             TRUSTEDFORM_ENABLED: true,                          // free script; cert retrieval is paid
-            LEAD_WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec",
+            // Page POSTs go to our own /api/lead proxy — same domain (bypasses
+            // ad-blockers), server-side retries, no 302 race condition.
+            // The proxy forwards to APPS_SCRIPT_URL (set in Vercel env vars).
+            LEAD_WEBHOOK_URL: "/api/lead",
+            // Apps Script URL kept here ONLY for the admin dashboard's GET
+            // (read-back). The dashboard fetches Sheet rows directly with the
+            // admin token; that's a server→sheet read, not a write.
+            ADMIN_READ_URL: "https://script.google.com/macros/s/AKfycbx3FQpEZB0QDej1zpauuEtOFxFDwmbLv-VNLnAUp4DlRZYxSyeU8V-btwNJewdat4CDRw/exec",
             ADMIN_REMOTE_TOKEN: "REPLACE_WITH_A_LONG_RANDOM_STRING_AARON_WILL_NEVER_GUESS_LOL_XOXO"
         };
         const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
@@ -2106,6 +2113,9 @@
         //    source can find it. Acceptable for early testing.
         // Sourced from TB_CONFIG (defined in <head>) so /thank-you.html shares them.
         const LEAD_WEBHOOK_URL = window.TB_CONFIG.LEAD_WEBHOOK_URL;
+        // Admin dashboard reads back directly from Apps Script (different URL,
+        // since /api/lead is write-only). The token is required.
+        const ADMIN_READ_URL = window.TB_CONFIG.ADMIN_READ_URL;
         const ADMIN_REMOTE_TOKEN = window.TB_CONFIG.ADMIN_REMOTE_TOKEN;
         const ADMIN_PASSCODE = "trucker2025";
 
@@ -2768,7 +2778,7 @@
         let _remoteError = null;
 
         async function fetchRemoteData(force) {
-            if (!LEAD_WEBHOOK_URL || !ADMIN_REMOTE_TOKEN) {
+            if (!ADMIN_READ_URL || !ADMIN_REMOTE_TOKEN) {
                 _remoteStatus = "not_configured";
                 return null;
             }
@@ -2778,7 +2788,7 @@
             }
             _remoteStatus = "loading";
             try {
-                const url = LEAD_WEBHOOK_URL + (LEAD_WEBHOOK_URL.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(ADMIN_REMOTE_TOKEN);
+                const url = ADMIN_READ_URL + (ADMIN_READ_URL.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(ADMIN_REMOTE_TOKEN);
                 const res = await fetch(url, { method: "GET" });
                 if (!res.ok) throw new Error("HTTP " + res.status);
                 const data = await res.json();
@@ -3136,8 +3146,8 @@
 
                 <h2>Webhook Status</h2>
                 <p class="admin-note">${LEAD_WEBHOOK_URL
-                    ? `✅ Sending to: <code>${LEAD_WEBHOOK_URL}</code>`
-                    : '⚠️ No webhook configured. Leads + events save to localStorage only (per-browser, not cross-device). Set <code>LEAD_WEBHOOK_URL</code> in the script (Zapier, Make, Supabase Edge Function, or your own backend) for true cross-device persistence and Hyros-grade attribution.'}</p>
+                    ? `✅ Page POSTs to: <code>${LEAD_WEBHOOK_URL}</code> (Vercel proxy → Apps Script with retries).<br>📊 Dashboard reads from: <code>${ADMIN_READ_URL || "(read URL not configured)"}</code>`
+                    : '⚠️ No webhook configured. Leads + events save to localStorage only.'}</p>
             `;
         }
 
