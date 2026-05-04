@@ -43,40 +43,50 @@ const RINGY_WEBHOOK_URL = "";
 const RINGY_SID = "";
 const RINGY_AUTH_TOKEN = "";
 
+// Set this to the ID of a SEPARATE Google Sheet you create for the client.
+// You share THAT sheet with the client as Editor — they can add columns
+// (Status, Notes, etc.) and mark up rows without touching your master.
+// To find the ID, open the sheet and look at the URL:
+//   https://docs.google.com/spreadsheets/d/THIS_PART_HERE/edit
+//                                          ↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+// Leave blank to fall back to a "Client_Leads" tab in the master sheet
+// (in which case the client has to share access to your master, not ideal).
+const CLIENT_SHEET_ID = "";
+
 // Columns the client/buyer sees. Edit this list to control what's exposed.
 // (Keys reference the flattened payload — q1_trucker_status, userData_email, etc.)
+// "notes" is synthesized at write time, see writeClientRow below.
 const CLIENT_COLUMNS = [
-  "received_at",
   "userData_firstName",
   "userData_phone",
   "userData_email",
   "userData_dob",
   "userData_zip",
-  "q1_trucker_status",
   "q12_income",
-  "source",
-  "first_touch_utm_campaign",
-  "trustedform_cert_url",
-  "tcpa_consent_ts",
-  "visitor"
+  "q1_trucker_status",
+  "q5_biggest_fear",
+  "q7_looking_for",
+  "notes"
 ];
 
 // Friendlier column names for the Client_Leads sheet.
 const CLIENT_COLUMN_LABELS = {
-  received_at: "Received",
   userData_firstName: "First Name",
   userData_phone: "Phone",
   userData_email: "Email",
-  userData_dob: "DOB",
+  userData_dob: "Date of Birth",
   userData_zip: "Zip",
-  q1_trucker_status: "Driver Type",
   q12_income: "Income",
-  source: "Source",
-  first_touch_utm_campaign: "Campaign",
-  trustedform_cert_url: "TrustedForm Cert",
-  tcpa_consent_ts: "TCPA Consent",
-  visitor: "Lead ID"
+  q1_trucker_status: "Driver Type",
+  q5_biggest_fear: "Biggest Fear",
+  q7_looking_for: "Looking For",
+  notes: "Notes"
 };
+
+// Default notes text written to the buyer-facing sheet + sent to Ringy. The
+// buyer already gets the structured fields above; this is just a context
+// label so it shows up on lead cards/emails.
+const LEAD_NOTES = "Trucker Benefit financial protection assessment — completed quiz, IUL match.";
 
 function doPost(e) {
   try {
@@ -134,23 +144,59 @@ function doGet(e) {
 }
 
 /**
- * Append a row to the "Client_Leads" tab with only the buyer-facing columns
- * defined in CLIENT_COLUMNS. Headers are written once on the first lead.
+ * Append a row to the buyer-facing sheet with only CLIENT_COLUMNS.
+ *
+ * If CLIENT_SHEET_ID is set, writes to that external sheet (recommended —
+ * you share THAT sheet with the buyer as Editor so they can add Status,
+ * Notes, etc.). Otherwise falls back to a "Client_Leads" tab inside the
+ * master sheet.
+ *
+ * Headers are written once on the first lead. The script never overwrites
+ * existing rows, so any columns the buyer adds to the right (or any edits
+ * they make to past rows) are preserved.
  */
-function writeClientRow(ss, flat) {
-  let sheet = ss.getSheetByName("Client_Leads");
-  if (!sheet) {
-    sheet = ss.insertSheet("Client_Leads");
+function writeClientRow(masterSS, flat) {
+  // Inject synthesized "notes" so the row writer can find it.
+  flat = Object.assign({}, flat, { notes: LEAD_NOTES });
+
+  let sheet;
+  if (CLIENT_SHEET_ID) {
+    try {
+      const clientSS = SpreadsheetApp.openById(CLIENT_SHEET_ID);
+      sheet = clientSS.getSheetByName("Leads") || clientSS.insertSheet("Leads");
+    } catch (err) {
+      console.error("Could not open CLIENT_SHEET_ID, falling back to master tab:", err);
+      sheet = masterSS.getSheetByName("Client_Leads") || masterSS.insertSheet("Client_Leads");
+    }
+  } else {
+    sheet = masterSS.getSheetByName("Client_Leads") || masterSS.insertSheet("Client_Leads");
+  }
+
+  // Write header row on first use.
+  if (sheet.getLastRow() === 0) {
     const labels = CLIENT_COLUMNS.map(function(k) {
       return CLIENT_COLUMN_LABELS[k] || k;
     });
     sheet.getRange(1, 1, 1, labels.length).setValues([labels]);
     sheet.setFrozenRows(1);
-    // Bold header
     sheet.getRange(1, 1, 1, labels.length).setFontWeight("bold");
   }
-  const row = CLIENT_COLUMNS.map(function(k) {
-    const v = flat[k];
+
+  // Build the row by matching against existing headers (in case the buyer
+  // added their own columns like Status / Notes — we leave those blank
+  // for them to fill in manually).
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  // Map our CLIENT_COLUMN_LABELS values back to their internal keys so we
+  // can look up the buyer-friendly header → underlying field.
+  const labelToKey = {};
+  Object.keys(CLIENT_COLUMN_LABELS).forEach(function(k) {
+    labelToKey[CLIENT_COLUMN_LABELS[k]] = k;
+  });
+
+  const row = headers.map(function(h) {
+    const internalKey = labelToKey[h] || h;
+    const v = flat[internalKey];
     return (v === undefined || v === null) ? "" : v;
   });
   sheet.appendRow(row);
@@ -163,9 +209,9 @@ function writeClientRow(ss, flat) {
  * common defaults.
  */
 function pushToRingy(flat) {
+  // Fields the client receives. Match exactly what Ringy is mapped to expect.
   const payload = {
     first_name: flat.userData_firstName || "",
-    last_name: "",
     phone: flat.userData_phone || "",
     email: flat.userData_email || "",
     date_of_birth: flat.userData_dob || "",
@@ -174,13 +220,7 @@ function pushToRingy(flat) {
     driver_type: flat.q1_trucker_status || "",
     biggest_fear: flat.q5_biggest_fear || "",
     looking_for: flat.q7_looking_for || "",
-    lead_source: flat.source || "trucker_benefit",
-    utm_campaign: flat.first_touch_utm_campaign || "",
-    utm_source: flat.first_touch_utm_source || "",
-    fbclid: flat.first_touch_fbclid || "",
-    trustedform_cert_url: flat.trustedform_cert_url || "",
-    tcpa_consent_timestamp: flat.tcpa_consent_ts || "",
-    notes: "Trucker financial protection assessment — see q-fields for full quiz answers."
+    notes: LEAD_NOTES
   };
   // If Ringy requires SID + auth_token, include them.
   if (RINGY_SID) payload.sid = RINGY_SID;
