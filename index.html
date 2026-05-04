@@ -2810,30 +2810,39 @@
         }
 
         // Normalize a remote row (from the Sheet — flat columns) back into the
-        // shape the dashboard expects (nested userData / first_touch / answers).
+        // shape the dashboard expects (nested userData / first_touch / data / answers).
+        // The Apps Script flatten() expands nested objects, so {data:{depth:50}}
+        // is stored as {data_depth: 50} in the Sheet — we have to reverse it.
         function unflattenRow(row) {
-            const out = { userData: {}, first_touch: {}, last_touch: {}, tcpa_consent: {} };
+            const out = { userData: {}, first_touch: {}, last_touch: {}, tcpa_consent: {}, data: {} };
             Object.keys(row || {}).forEach(k => {
                 const v = row[k];
                 if (k.indexOf("userData_") === 0) out.userData[k.slice(9)] = v;
                 else if (k.indexOf("first_touch_") === 0) out.first_touch[k.slice(12)] = v;
                 else if (k.indexOf("last_touch_") === 0) out.last_touch[k.slice(11)] = v;
                 else if (k.indexOf("tcpa_consent_") === 0) out.tcpa_consent[k.slice(13)] = v;
+                else if (k.indexOf("data_") === 0) out.data[k.slice(5)] = v;
                 else if (k === "data") {
-                    try { out.data = JSON.parse(v); } catch (e) { out.data = v; }
+                    try { Object.assign(out.data, JSON.parse(v)); } catch (e) {}
                 }
                 else if (k === "answers") {
                     try { out.answers = JSON.parse(v); } catch (e) { out.answers = []; }
                 }
                 else out[k] = v;
             });
-            // Normalize timestamp fields the dashboard reads.
-            if (typeof out.savedAtTs !== "number" && out.savedAt) {
-                out.savedAtTs = new Date(out.savedAt).getTime();
+            // Normalize timestamp fields the dashboard reads. Sheet may return
+            // these as numbers, ISO strings, or Date objects (via JSON).
+            const toNum = x => {
+                if (typeof x === "number") return x;
+                if (!x) return undefined;
+                const t = new Date(x).getTime();
+                return isFinite(t) ? t : undefined;
+            };
+            if (typeof out.savedAtTs !== "number") {
+                out.savedAtTs = toNum(out.savedAtTs) || toNum(out.savedAt);
             }
             if (typeof out.ts !== "number") {
-                if (out.received_at) out.ts = new Date(out.received_at).getTime();
-                else if (out.savedAtTs) out.ts = out.savedAtTs;
+                out.ts = toNum(out.ts) || toNum(out.received_at) || out.savedAtTs;
             }
             return out;
         }
