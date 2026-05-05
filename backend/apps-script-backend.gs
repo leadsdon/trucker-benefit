@@ -99,6 +99,78 @@ const CLIENT_COLUMN_LABELS = {
 // label so it shows up on lead cards/emails.
 const LEAD_NOTES = "Trucker Benefit financial protection assessment — completed quiz, IUL match.";
 
+/**
+ * One-time auth check. Run this from the editor (▶ button) BEFORE deploying.
+ * Google will prompt for SpreadsheetApp + UrlFetchApp permissions — accept
+ * all of them. This grants the script everything it needs to:
+ *   - Write to the master sheet (already worked)
+ *   - openById the SEPARATE client sheet (was failing silently)
+ *   - UrlFetchApp.fetch to Ringy (was failing silently)
+ *
+ * Look at the Execution Log (View → Logs / Cmd+Enter) for ✅ marks. Any ❌
+ * means that capability isn't granted yet.
+ */
+function testAuth() {
+  Logger.log('Running auth test...');
+
+  // Test 1: master sheet write
+  try {
+    const masterSS = SpreadsheetApp.getActiveSpreadsheet();
+    Logger.log('✅ Master sheet (' + masterSS.getName() + ') accessible');
+  } catch (err) {
+    Logger.log('❌ Master sheet failed: ' + err);
+  }
+
+  // Test 2: client sheet via openById (this is what was failing)
+  try {
+    if (!CLIENT_SHEET_ID) {
+      Logger.log('⚠ CLIENT_SHEET_ID is empty — set it before testing');
+    } else {
+      const clientSS = SpreadsheetApp.openById(CLIENT_SHEET_ID);
+      Logger.log('✅ Client sheet (' + clientSS.getName() + ') accessible via openById');
+    }
+  } catch (err) {
+    Logger.log('❌ Client sheet openById failed: ' + err);
+    Logger.log('   → Make sure CLIENT_SHEET_ID is correct AND that this Google account is shared on the client sheet (or owns it).');
+  }
+
+  // Test 3: external URL fetch (Ringy uses this)
+  try {
+    const resp = UrlFetchApp.fetch('https://httpbin.org/get', { muteHttpExceptions: true });
+    Logger.log('✅ UrlFetchApp works (status ' + resp.getResponseCode() + ')');
+  } catch (err) {
+    Logger.log('❌ UrlFetchApp failed: ' + err);
+  }
+
+  // Test 4: actual Ringy POST (with real lead-shaped payload)
+  if (RINGY_WEBHOOK_URL && RINGY_SID && RINGY_AUTH_TOKEN) {
+    try {
+      const resp = UrlFetchApp.fetch(RINGY_WEBHOOK_URL, {
+        method: 'post',
+        contentType: 'application/json',
+        payload: JSON.stringify({
+          sid: RINGY_SID,
+          authToken: RINGY_AUTH_TOKEN,
+          phone_number: '(415) 234-5678',
+          first_name: 'AUTH',
+          last_name: 'TEST',
+          email: 'authtest@truckerbenefit.com',
+          state: 'TX',
+          notes: 'AUTH TEST — please delete'
+        }),
+        muteHttpExceptions: true
+      });
+      Logger.log('✅ Ringy POST: status ' + resp.getResponseCode() + ', body: ' + resp.getContentText().slice(0, 200));
+    } catch (err) {
+      Logger.log('❌ Ringy POST failed: ' + err);
+    }
+  } else {
+    Logger.log('⚠ Ringy not configured — set RINGY_WEBHOOK_URL + RINGY_SID + RINGY_AUTH_TOKEN');
+  }
+
+  Logger.log('Done. Look for ✅ on all 4 lines.');
+}
+
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
