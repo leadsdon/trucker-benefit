@@ -11,6 +11,8 @@
 // Set the destination URL once as APPS_SCRIPT_URL in Vercel env vars.
 // Leave the page-side TB_CONFIG.LEAD_WEBHOOK_URL pointing at "/api/lead".
 
+const { fireMetaCapiEvent } = require('../lib/capi.js');
+
 const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -131,24 +133,43 @@ module.exports = async function handler(req, res) {
         proxy_user_agent: req.headers['user-agent'] || null
     };
 
-    // Fire both writes in parallel. Supabase is the always-live source of truth
-    // for the dashboard; Apps Script handles the client sheet + Ringy push.
-    // If one fails, the other still goes — we don't lose the lead.
-    const [supabaseResult, appsScriptResult] = await Promise.all([
+    // Fire all destinations in parallel:
+    //  - Supabase: source of truth for dashboard
+    //  - Apps Script: client sheet + Ringy push
+    //  - Meta CAPI: server-side conversion events (only for kind=lead)
+    //
+    // Server-side CAPI firing here (instead of from the browser on
+    // /thank-you.html) is what fixes Meta's "low coverage" warning — these
+    // requests don't get cancelled by the user navigating to call-now etc.
+    const writes = [
         writeToSupabase(enriched),
         forwardToAppsScript(enriched)
-    ]);
+    ];
 
-    if (supabaseResult.ok || appsScriptResult.ok) {
-        console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error}`);
+    const isLead = kind === 'lead';
+    const capiIds = (payload && payload.capi_event_ids) || {};
+    if (isLead && capiIds.lead) {
+        writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
+    }
+
+    const results = await Promise.all(writes);
+    const [supabaseResult, appsScriptResult, capiResult] = results;
+
+    const okAny = supabaseResult.ok || appsScriptResult.ok;
+    const capiInfo = capiResult ? `capi_lead=${capiResult.lead && capiResult.lead.ok ? 'ok' : 'err:' + (capiResult.lead && capiResult.lead.error)} capi_reg=${capiResult.reg && capiResult.reg.ok ? 'ok' : 'err:' + (capiResult.reg && capiResult.reg.error)}` : 'capi=skipped';
+
+    if (okAny) {
+        console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error} ${capiInfo}`);
         return res.status(200).json({
             ok: true,
             supabase: supabaseResult.ok,
             apps_script: appsScriptResult.ok,
-            apps_script_attempt: appsScriptResult.attempt
+            apps_script_attempt: appsScriptResult.attempt,
+            capi_lead: capiResult && capiResult.lead && capiResult.lead.ok,
+            capi_reg: capiResult && capiResult.reg && capiResult.reg.ok
         });
     } else {
-        console.error(`[api/lead] BOTH FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error}`);
+        console.error(`[api/lead] BOTH FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error} ${capiInfo}`);
         return res.status(502).json({
             error: 'all_destinations_failed',
             supabase: supabaseResult.error,
@@ -156,3 +177,55 @@ module.exports = async function handler(req, res) {
         });
     }
 };
+
+// Fire Lead + CompleteRegistration to Meta CAPI server-side.
+// Uses event_ids that the client also passed to the browser pixel via
+// sessionStorage, so Meta dedupes browser + server.
+async function fireServerCapiForLead(payload, capiIds, ip, userAgent) {
+    const u = payload.userData || {};
+    const ft = payload.first_touch || {};
+    const sourceUrl = payload.event_source_url
+        || payload.thank_you_url
+        || (payload.proxy_origin ? payload.proxy_origin + '/thank-you.html' : 'https://truckerbenefit.com/thank-you.html');
+
+    // Reconstruct fbc from first_touch fbclid if no cookie was passed.
+    let fbc = payload.fbc;
+    if (!fbc && ft.fbclid) {
+        fbc = 'fb.1.' + (ft.ts || Date.now()) + '.' + ft.fbclid;
+    }
+
+    const userData = {
+        email: u.email,
+        phone: u.phone,
+        firstName: u.firstName,
+        dob: u.dob,
+        zip: u.zip,
+        country: 'us',
+        external_id: payload.visitor,
+        fbp: payload.fbp,
+        fbc: fbc
+    };
+
+    const [lead, reg] = await Promise.all([
+        fireMetaCapiEvent({
+            event_name: 'Lead',
+            event_id: capiIds.lead,
+            event_source_url: sourceUrl,
+            user_data: userData,
+            custom_data: { content_name: 'Quiz Complete', value: 1, currency: 'USD' },
+            client_ip: ip,
+            client_user_agent: userAgent
+        }),
+        capiIds.registration ? fireMetaCapiEvent({
+            event_name: 'CompleteRegistration',
+            event_id: capiIds.registration,
+            event_source_url: sourceUrl,
+            user_data: userData,
+            custom_data: {},
+            client_ip: ip,
+            client_user_agent: userAgent
+        }) : Promise.resolve({ ok: false, error: 'no_reg_event_id' })
+    ]);
+
+    return { lead, reg };
+}

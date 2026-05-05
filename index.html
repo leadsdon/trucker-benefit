@@ -2715,10 +2715,41 @@
 
         function showResults() {
             trackEvent("quiz_completed");
-            saveLead({ status: "complete", userData, answers, tcpa_consent: userData.tcpa_consent });
+
+            // Generate stable event_ids that BOTH the browser pixel (on
+            // /thank-you.html) AND the server-side CAPI (in /api/lead) will
+            // use. Same id on both sides → Meta dedupes → 100% CAPI coverage.
+            const leadEventId = "ev_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+            const regEventId = leadEventId + "_reg";
+
+            // Read Meta's first-party cookies HERE (still on index.html, before
+            // redirect) so we can pass them to /api/lead → CAPI for stronger
+            // match quality. After navigation these are still present, but
+            // grabbing them now means server-side CAPI fires the moment
+            // /api/lead receives the payload.
+            const cookieMatch = (n) => {
+                const m = document.cookie.match(new RegExp("(?:^|; )" + n + "=([^;]+)"));
+                return m ? decodeURIComponent(m[1]) : undefined;
+            };
+            const fbp = cookieMatch("_fbp");
+            let fbc = cookieMatch("_fbc");
+            if (!fbc && ATTRIBUTION.first && ATTRIBUTION.first.fbclid) {
+                fbc = "fb.1." + (ATTRIBUTION.first.ts || Date.now()) + "." + ATTRIBUTION.first.fbclid;
+            }
+
+            saveLead({
+                status: "complete",
+                userData,
+                answers,
+                tcpa_consent: userData.tcpa_consent,
+                capi_event_ids: { lead: leadEventId, registration: regEventId },
+                fbp: fbp,
+                fbc: fbc,
+                event_source_url: location.origin + "/thank-you.html"
+            });
 
             // Stash the lead so /thank-you.html can render personalized content
-            // and fire conversion pixels with the right URL for CAPI dedup.
+            // and fire the BROWSER pixel with the SAME event_ids.
             try {
                 sessionStorage.setItem("tb_pending_lead", JSON.stringify({
                     userData,
@@ -2727,12 +2758,11 @@
                     session: SESSION_ID,
                     source: ATTRIBUTION.source,
                     first_touch: ATTRIBUTION.first,
-                    savedAtTs: Date.now()
+                    savedAtTs: Date.now(),
+                    capi_event_ids: { lead: leadEventId, registration: regEventId }
                 }));
             } catch (e) {}
 
-            // Hand control to /thank-you.html — that page fires Lead /
-            // CompleteRegistration / Google Ads conversion + renders the IUL match.
             unlockQuiz();
             location.href = "/thank-you.html";
         }

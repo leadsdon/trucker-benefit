@@ -445,14 +445,16 @@
         callBtn.textContent = "📞 CALL NOW: " + CALL_NOW_NUMBER;
 
         // ─── Conversion firing ─────────────────────────────────────────────
-        // Each event has a stable event_id. The browser Pixel and the
-        // server-side Conversions API both fire with the same event_id —
-        // Meta dedupes automatically.
+        // Lead + CompleteRegistration event_ids were generated in index.html's
+        // showResults() and passed in sessionStorage. The browser pixel uses
+        // the SAME ids the server-side CAPI (in /api/lead) used, so Meta
+        // dedupes browser+server → 100% CAPI coverage on Lead events.
         function genEventId() {
             return "ev_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
         }
-        const LEAD_EVENT_ID = genEventId();
-        const REG_EVENT_ID = LEAD_EVENT_ID + "_reg";
+        const PENDING_IDS = (TY_PENDING && TY_PENDING.capi_event_ids) || {};
+        const LEAD_EVENT_ID = PENDING_IDS.lead || genEventId();
+        const REG_EVENT_ID = PENDING_IDS.registration || (LEAD_EVENT_ID + "_reg");
 
         const consent = localStorage.getItem("tb_consent");
         const allowPixels = consent !== "declined";
@@ -513,12 +515,10 @@
                 fbq("track", "CompleteRegistration", {}, { eventID: REG_EVENT_ID });
             } catch (e) {}
         }
-        // Always fire CAPI — even if user declined cookies / has an ad-blocker,
-        // we still own the lead data they explicitly submitted.
-        // (If you want CAPI gated by consent too, move these inside the
-        // `if (allowPixels)` block above.)
-        fireCapi("Lead", LEAD_EVENT_ID, { content_name: "Quiz Complete", value: 1, currency: "USD" });
-        fireCapi("CompleteRegistration", REG_EVENT_ID, {});
+        // Lead + CompleteRegistration CAPI events ALREADY fired server-side
+        // from /api/lead with the same event_ids — no need to fire from the
+        // browser too (would just be redundant, and the browser fetch is
+        // unreliable across navigation which was killing CAPI coverage).
 
         if (allowPixels && window.gtag) {
             try {
