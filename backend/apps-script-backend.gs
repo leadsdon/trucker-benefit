@@ -56,14 +56,21 @@ const CLIENT_SHEET_ID = "";
 // Columns the client/buyer sees. Edit this list to control what's exposed.
 // (Keys reference the flattened payload — q1_trucker_status, userData_email, etc.)
 // "notes" is synthesized at write time, see writeClientRow below.
+//
+// NOTE: question numbers were renumbered when we added health (Q8),
+// call_preference (Q12), and monthly_budget (Q15). Keep these in sync with
+// QUESTION_SLUGS in index.html.
 const CLIENT_COLUMNS = [
   "userData_firstName",
   "userData_phone",
   "userData_email",
   "userData_dob",
   "userData_zip",
-  "q12_income",
+  "q14_income",
+  "q15_monthly_budget",
   "q1_trucker_status",
+  "q8_health_conditions",
+  "q12_call_preference",
   "q5_biggest_fear",
   "q7_looking_for",
   "notes"
@@ -76,8 +83,11 @@ const CLIENT_COLUMN_LABELS = {
   userData_email: "Email",
   userData_dob: "Date of Birth",
   userData_zip: "Zip",
-  q12_income: "Income",
+  q14_income: "Income",
+  q15_monthly_budget: "Monthly Budget",
   q1_trucker_status: "Driver Type",
+  q8_health_conditions: "Health Conditions",
+  q12_call_preference: "Call Preference",
   q5_biggest_fear: "Biggest Fear",
   q7_looking_for: "Looking For",
   notes: "Notes"
@@ -223,8 +233,11 @@ function pushToRingy(flat) {
     zip: flat.userData_zip || "",
     // Ringy custom fields — your client must create these in their Ringy
     // account (Lead Sources → Custom Fields) for them to show up on the lead.
-    income: flat.q12_income || "",
+    income: flat.q14_income || "",
+    monthly_budget: flat.q15_monthly_budget || "",
     driver_type: flat.q1_trucker_status || "",
+    health_conditions: flat.q8_health_conditions || "",
+    call_preference: flat.q12_call_preference || "",
     biggest_fear: flat.q5_biggest_fear || "",
     looking_for: flat.q7_looking_for || "",
     notes: LEAD_NOTES

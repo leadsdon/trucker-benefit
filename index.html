@@ -1692,7 +1692,12 @@
         <div id="quizIntroCopy" style="max-width: 750px; margin: 40px auto 30px; text-align: center;">
             <div style="background: rgba(255, 184, 0, 0.15); border-left: 5px solid #FFB800; padding: 25px; border-radius: 10px; margin-bottom: 25px;">
                 <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #FFB800; margin-bottom: 12px; letter-spacing: 1px;">⏱️ ONLY 60 SECONDS</h3>
-                <p style="font-size: 17px; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0;">Answer 13 quick questions and we'll reveal your personalized financial protection plan—plus show you how to get <strong style="color: #FFB800;">$100,000-$500,000 in coverage</strong> for less than you spend on coffee.</p>
+                <p style="font-size: 17px; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0;">Answer 16 quick questions and we'll reveal your personalized financial protection plan—plus show you how to get <strong style="color: #FFB800;">$100,000-$500,000 in coverage</strong> for less than you spend on coffee.</p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, rgba(0, 78, 137, 0.25), rgba(255, 184, 0, 0.12)); border: 2px solid #FFB800; padding: 18px 22px; border-radius: 12px; margin-bottom: 22px; text-align: left;">
+                <div style="font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #FFB800; letter-spacing: 1.5px; margin-bottom: 6px;">💰 BIG DEATH BENEFIT YOU CAN BORROW AGAINST</div>
+                <p style="font-size: 14px; color: rgba(255, 255, 255, 0.92); line-height: 1.5; margin: 0;">Your policy builds <strong style="color: #FFB800;">tax-free cash value</strong> you can borrow against anytime — emergency truck repair, medical bill, college tuition, business expansion. It's an emergency fund that grows AND protects your family.</p>
             </div>
 
             <div style="display: flex; justify-content: space-around; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
@@ -1999,11 +2004,24 @@
                 ]
             },
 
+            // Health screening — required for insurance underwriting
+            {
+                phase: 4,
+                phaseLabel: "STEP 4 OF 5 · QUICK CHECK",
+                number: 8,
+                text: "Have you been diagnosed with heart disease, stroke, cancer, or diabetes in the last 5 years?",
+                subtext: "Honest answers help us match you with the right carrier — many drivers with conditions still qualify.",
+                options: [
+                    "No — I'm in good health",
+                    "Yes — I have one or more conditions"
+                ]
+            },
+
             // PHASE 6: PII (framed as "where to send your plan")
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 8,
+                number: 9,
                 text: "Where should we send your personalized plan? First, your name:",
                 type: "text",
                 placeholder: "First name",
@@ -2012,7 +2030,7 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 9,
+                number: 10,
                 text: "What's your date of birth?",
                 subtext: "We use this to calculate your exact coverage and locked-in rate.",
                 type: "text",
@@ -2022,7 +2040,7 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 10,
+                number: 11,
                 text: "What email should we send your plan to?",
                 subtext: "We'll email your personalized financial protection plan here.",
                 type: "text",
@@ -2031,10 +2049,21 @@
             },
             {
                 phase: 5,
+                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
+                number: 12,
+                text: "Would you prefer a phone call or video call to walk through your plan?",
+                subtext: "Pick whichever's easier for you — your specialist will reach out the way you want.",
+                options: [
+                    "Phone call",
+                    "Video call (Zoom or FaceTime)"
+                ]
+            },
+            {
+                phase: 5,
                 phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
-                number: 11,
+                number: 13,
                 text: "Best phone number to reach you?",
-                subtext: "We'll call to walk you through your personalized plan — make sure it's correct.",
+                subtext: "We'll contact you to walk through your personalized plan — make sure it's correct.",
                 type: "text",
                 placeholder: "(555) 123-4567",
                 inputType: "phone"
@@ -2042,7 +2071,7 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
-                number: 12,
+                number: 14,
                 text: "What's your approximate annual income?",
                 options: [
                     "Under $40,000",
@@ -2054,8 +2083,22 @@
             },
             {
                 phase: 5,
+                phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
+                number: 15,
+                text: "How much can you comfortably set aside each month for your protection plan?",
+                subtext: "Most truckers we work with budget $200–$800/month for full coverage.",
+                options: [
+                    "Under $200",
+                    "$200 - $400",
+                    "$400 - $600",
+                    "$600 - $800",
+                    "$800+"
+                ]
+            },
+            {
+                phase: 5,
                 phaseLabel: "FINAL STEP",
-                number: 13,
+                number: 16,
                 text: "Last one — what's your zip code?",
                 type: "text",
                 placeholder: "Zip code",
@@ -2081,12 +2124,15 @@
             5: "biggest_fear",
             6: "protection_fear",
             7: "looking_for",
-            8: "first_name",
-            9: "dob",
-            10: "email",
-            11: "phone",
-            12: "income",
-            13: "zip"
+            8: "health_conditions",
+            9: "first_name",
+            10: "dob",
+            11: "email",
+            12: "call_preference",
+            13: "phone",
+            14: "income",
+            15: "monthly_budget",
+            16: "zip"
         };
 
         function answersToFlatColumns(answersArray) {
