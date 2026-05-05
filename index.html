@@ -33,7 +33,11 @@
             // Apps Script URL kept here ONLY for the admin dashboard's GET
             // (read-back). The dashboard fetches Sheet rows directly with the
             // admin token; that's a server→sheet read, not a write.
-            ADMIN_READ_URL: "https://script.google.com/macros/s/AKfycbww6KMt7fV1zCSj_WRztLN2XxF5H6j4B5dgam7QcONnmaX_0xbfNgzMGThSxtrphOrlOg/exec",
+            // Admin dashboard reads from our own /api/admin (Supabase-backed,
+            // always-live). The route is gated by ADMIN_TOKEN env var on the
+            // server, sent here as ?token=. Anyone can guess this token from
+            // page source — keep that in mind for production.
+            ADMIN_READ_URL: "/api/admin",
             ADMIN_REMOTE_TOKEN: "REPLACE_WITH_A_LONG_RANDOM_STRING_AARON_WILL_NEVER_GUESS_LOL_XOXO"
         };
         const _isConfigured = (v) => v && !v.startsWith("YOUR_") && !v.startsWith("AW-X") && !v.startsWith("G-X") && v !== "XXXXXXXXXX";
@@ -2809,11 +2813,23 @@
             }
         }
 
-        // Normalize a remote row (from the Sheet — flat columns) back into the
-        // shape the dashboard expects (nested userData / first_touch / data / answers).
-        // The Apps Script flatten() expands nested objects, so {data:{depth:50}}
-        // is stored as {data_depth: 50} in the Sheet — we have to reverse it.
+        // Normalize a remote row back into the shape the dashboard expects
+        // (nested userData / first_touch / data / answers).
+        //
+        // - Supabase rows already arrive nested (via /api/admin). We pass them
+        //   through unchanged.
+        // - Legacy Apps Script rows arrive flat (data_depth, userData_email,
+        //   etc.) because Apps Script's flatten() expanded nested objects into
+        //   columns. We reverse that here.
         function unflattenRow(row) {
+            if (!row) return row;
+            // Already nested — likely from /api/admin (Supabase). Skip work.
+            if (typeof row.userData === 'object' && row.userData !== null) {
+                if (!row.data || typeof row.data !== 'object') row.data = {};
+                if (!row.first_touch || typeof row.first_touch !== 'object') row.first_touch = {};
+                if (!row.last_touch || typeof row.last_touch !== 'object') row.last_touch = {};
+                return row;
+            }
             const out = { userData: {}, first_touch: {}, last_touch: {}, tcpa_consent: {}, data: {} };
             Object.keys(row || {}).forEach(k => {
                 const v = row[k];

@@ -12,6 +12,8 @@
 // Leave the page-side TB_CONFIG.LEAD_WEBHOOK_URL pointing at "/api/lead".
 
 const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [0, 500, 1500];
 
@@ -28,6 +30,7 @@ function sleep(ms) {
 }
 
 async function forwardToAppsScript(payload) {
+    if (!APPS_SCRIPT_URL) return { ok: false, error: 'apps_script_url_not_configured' };
     const body = JSON.stringify(payload);
     let lastError = null;
 
@@ -53,19 +56,64 @@ async function forwardToAppsScript(payload) {
     return { ok: false, error: lastError };
 }
 
+async function writeToSupabase(payload) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) return { ok: false, error: 'supabase_not_configured' };
+
+    const isLead = payload.kind === 'lead';
+    const table = isLead ? 'leads' : 'events';
+
+    let row;
+    if (isLead) {
+        const u = payload.userData || {};
+        row = {
+            visitor: payload.visitor || null,
+            session: payload.session || null,
+            source: payload.source || null,
+            device: payload.device || null,
+            status: payload.status || null,
+            first_name: u.firstName || null,
+            email: u.email || null,
+            phone: u.phone || null,
+            payload: payload
+        };
+    } else {
+        row = {
+            name: payload.name || null,
+            visitor: payload.visitor || null,
+            session: payload.session || null,
+            source: payload.source || null,
+            device: payload.device || null,
+            ts: payload.ts || null,
+            event_id: payload.event_id || null,
+            payload: payload.data || {}
+        };
+    }
+
+    try {
+        const resp = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_SERVICE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_SERVICE_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(row)
+        });
+        if (resp.status >= 200 && resp.status < 300) return { ok: true };
+        const text = await resp.text();
+        return { ok: false, error: `supabase ${resp.status}: ${text.slice(0, 200)}` };
+    } catch (err) {
+        return { ok: false, error: String(err && err.message || err) };
+    }
+}
+
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(204).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
-
-    if (!APPS_SCRIPT_URL) {
-        // No destination configured — log loudly so the operator notices in
-        // Vercel logs. Returning 500 so the client knows it failed.
-        console.error('[api/lead] APPS_SCRIPT_URL env var is not set');
-        return res.status(500).json({ error: 'apps_script_url_not_configured' });
-    }
 
     const payload = parseBody(req);
     const kind = payload && payload.kind;
@@ -83,14 +131,28 @@ module.exports = async function handler(req, res) {
         proxy_user_agent: req.headers['user-agent'] || null
     };
 
-    const result = await forwardToAppsScript(enriched);
+    // Fire both writes in parallel. Supabase is the always-live source of truth
+    // for the dashboard; Apps Script handles the client sheet + Ringy push.
+    // If one fails, the other still goes — we don't lose the lead.
+    const [supabaseResult, appsScriptResult] = await Promise.all([
+        writeToSupabase(enriched),
+        forwardToAppsScript(enriched)
+    ]);
 
-    if (result.ok) {
-        // Compact success log; visible in Vercel → Project → Logs
-        console.log(`[api/lead] ok kind=${kind} attempt=${result.attempt}`);
-        return res.status(200).json({ ok: true, attempt: result.attempt });
+    if (supabaseResult.ok || appsScriptResult.ok) {
+        console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error}`);
+        return res.status(200).json({
+            ok: true,
+            supabase: supabaseResult.ok,
+            apps_script: appsScriptResult.ok,
+            apps_script_attempt: appsScriptResult.attempt
+        });
     } else {
-        console.error(`[api/lead] FAILED kind=${kind} error=${result.error}`);
-        return res.status(502).json({ error: 'forward_failed', detail: result.error });
+        console.error(`[api/lead] BOTH FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error}`);
+        return res.status(502).json({
+            error: 'all_destinations_failed',
+            supabase: supabaseResult.error,
+            apps_script: appsScriptResult.error
+        });
     }
 };
