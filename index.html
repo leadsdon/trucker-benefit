@@ -2716,11 +2716,10 @@
         function showResults() {
             trackEvent("quiz_completed");
 
-            // Generate stable event_ids that BOTH the browser pixel (on
+            // Generate a stable event_id that BOTH the browser pixel (on
             // /thank-you.html) AND the server-side CAPI (in /api/lead) will
             // use. Same id on both sides → Meta dedupes → 100% CAPI coverage.
             const leadEventId = "ev_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
-            const regEventId = leadEventId + "_reg";
 
             // Read Meta's first-party cookies HERE (still on index.html, before
             // redirect) so we can pass them to /api/lead → CAPI for stronger
@@ -2742,14 +2741,14 @@
                 userData,
                 answers,
                 tcpa_consent: userData.tcpa_consent,
-                capi_event_ids: { lead: leadEventId, registration: regEventId },
+                capi_event_ids: { lead: leadEventId },
                 fbp: fbp,
                 fbc: fbc,
                 event_source_url: location.origin + "/thank-you.html"
             });
 
             // Stash the lead so /thank-you.html can render personalized content
-            // and fire the BROWSER pixel with the SAME event_ids.
+            // and fire the BROWSER pixel with the SAME event_id.
             try {
                 sessionStorage.setItem("tb_pending_lead", JSON.stringify({
                     userData,
@@ -2759,7 +2758,7 @@
                     source: ATTRIBUTION.source,
                     first_touch: ATTRIBUTION.first,
                     savedAtTs: Date.now(),
-                    capi_event_ids: { lead: leadEventId, registration: regEventId }
+                    capi_event_ids: { lead: leadEventId }
                 }));
             } catch (e) {}
 

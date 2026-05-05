@@ -445,16 +445,15 @@
         callBtn.textContent = "📞 CALL NOW: " + CALL_NOW_NUMBER;
 
         // ─── Conversion firing ─────────────────────────────────────────────
-        // Lead + CompleteRegistration event_ids were generated in index.html's
-        // showResults() and passed in sessionStorage. The browser pixel uses
-        // the SAME ids the server-side CAPI (in /api/lead) used, so Meta
-        // dedupes browser+server → 100% CAPI coverage on Lead events.
+        // Lead event_id was generated in index.html's showResults() and passed
+        // in sessionStorage. The browser pixel uses the SAME id the server-side
+        // CAPI (in /api/lead) used, so Meta dedupes browser+server → 100% CAPI
+        // coverage on Lead events.
         function genEventId() {
             return "ev_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
         }
         const PENDING_IDS = (TY_PENDING && TY_PENDING.capi_event_ids) || {};
         const LEAD_EVENT_ID = PENDING_IDS.lead || genEventId();
-        const REG_EVENT_ID = PENDING_IDS.registration || (LEAD_EVENT_ID + "_reg");
 
         const consent = localStorage.getItem("tb_consent");
         const allowPixels = consent !== "declined";
@@ -512,13 +511,12 @@
                     value: 1,
                     currency: "USD"
                 }, { eventID: LEAD_EVENT_ID });
-                fbq("track", "CompleteRegistration", {}, { eventID: REG_EVENT_ID });
             } catch (e) {}
         }
-        // Lead + CompleteRegistration CAPI events ALREADY fired server-side
-        // from /api/lead with the same event_ids — no need to fire from the
-        // browser too (would just be redundant, and the browser fetch is
-        // unreliable across navigation which was killing CAPI coverage).
+        // Lead CAPI ALREADY fired server-side from /api/lead with the same
+        // event_id — no need to fire from the browser too. Server-side fire is
+        // also gated by lead-quality checks (real-looking phone + email) so
+        // junk submissions don't pollute Meta's training data.
 
         if (allowPixels && window.gtag) {
             try {

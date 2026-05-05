@@ -12,6 +12,7 @@
 // Leave the page-side TB_CONFIG.LEAD_WEBHOOK_URL pointing at "/api/lead".
 
 const { fireMetaCapiEvent } = require('../lib/capi.js');
+const { assessLeadQuality } = require('../lib/lead-quality.js');
 
 const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -148,15 +149,34 @@ module.exports = async function handler(req, res) {
 
     const isLead = kind === 'lead';
     const capiIds = (payload && payload.capi_event_ids) || {};
+    let qualityCheck = null;
+
     if (isLead && capiIds.lead) {
-        writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
+        qualityCheck = assessLeadQuality(payload);
+        if (qualityCheck.ok) {
+            writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
+        } else {
+            // Lead still saves to Supabase + Apps Script (we keep the data),
+            // but no CAPI fire — Meta's algo doesn't get to learn from junk
+            // submissions, which keeps your CPL accurate as you scale.
+            console.log(`[api/lead] CAPI skipped — lead failed quality check: ${qualityCheck.reasons.join(', ')}`);
+        }
     }
 
     const results = await Promise.all(writes);
     const [supabaseResult, appsScriptResult, capiResult] = results;
 
     const okAny = supabaseResult.ok || appsScriptResult.ok;
-    const capiInfo = capiResult ? `capi_lead=${capiResult.lead && capiResult.lead.ok ? 'ok' : 'err:' + (capiResult.lead && capiResult.lead.error)} capi_reg=${capiResult.reg && capiResult.reg.ok ? 'ok' : 'err:' + (capiResult.reg && capiResult.reg.error)}` : 'capi=skipped';
+    let capiInfo;
+    if (!isLead || !capiIds.lead) {
+        capiInfo = 'capi=skipped';
+    } else if (qualityCheck && !qualityCheck.ok) {
+        capiInfo = 'capi=blocked_low_quality:' + qualityCheck.reasons.join('|');
+    } else if (capiResult) {
+        capiInfo = `capi_lead=${capiResult.lead && capiResult.lead.ok ? 'ok' : 'err:' + (capiResult.lead && capiResult.lead.error)}`;
+    } else {
+        capiInfo = 'capi=unknown';
+    }
 
     if (okAny) {
         console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error} ${capiInfo}`);
@@ -166,7 +186,7 @@ module.exports = async function handler(req, res) {
             apps_script: appsScriptResult.ok,
             apps_script_attempt: appsScriptResult.attempt,
             capi_lead: capiResult && capiResult.lead && capiResult.lead.ok,
-            capi_reg: capiResult && capiResult.reg && capiResult.reg.ok
+            quality: qualityCheck
         });
     } else {
         console.error(`[api/lead] BOTH FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error} ${capiInfo}`);
@@ -206,26 +226,15 @@ async function fireServerCapiForLead(payload, capiIds, ip, userAgent) {
         fbc: fbc
     };
 
-    const [lead, reg] = await Promise.all([
-        fireMetaCapiEvent({
-            event_name: 'Lead',
-            event_id: capiIds.lead,
-            event_source_url: sourceUrl,
-            user_data: userData,
-            custom_data: { content_name: 'Quiz Complete', value: 1, currency: 'USD' },
-            client_ip: ip,
-            client_user_agent: userAgent
-        }),
-        capiIds.registration ? fireMetaCapiEvent({
-            event_name: 'CompleteRegistration',
-            event_id: capiIds.registration,
-            event_source_url: sourceUrl,
-            user_data: userData,
-            custom_data: {},
-            client_ip: ip,
-            client_user_agent: userAgent
-        }) : Promise.resolve({ ok: false, error: 'no_reg_event_id' })
-    ]);
+    const lead = await fireMetaCapiEvent({
+        event_name: 'Lead',
+        event_id: capiIds.lead,
+        event_source_url: sourceUrl,
+        user_data: userData,
+        custom_data: { content_name: 'Quiz Complete', value: 1, currency: 'USD' },
+        client_ip: ip,
+        client_user_agent: userAgent
+    });
 
-    return { lead, reg };
+    return { lead };
 }
