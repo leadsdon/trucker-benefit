@@ -1692,7 +1692,7 @@
         <div id="quizIntroCopy" style="max-width: 750px; margin: 40px auto 30px; text-align: center;">
             <div style="background: rgba(255, 184, 0, 0.15); border-left: 5px solid #FFB800; padding: 25px; border-radius: 10px; margin-bottom: 25px;">
                 <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: #FFB800; margin-bottom: 12px; letter-spacing: 1px;">⏱️ ONLY 60 SECONDS</h3>
-                <p style="font-size: 17px; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0;">Answer 16 quick questions and we'll reveal your personalized financial protection plan—plus show you how to get <strong style="color: #FFB800;">$100,000-$500,000 in coverage</strong> for less than you spend on coffee.</p>
+                <p style="font-size: 17px; line-height: 1.6; color: rgba(255, 255, 255, 0.95); margin: 0;">Answer 13 quick questions and we'll reveal your personalized financial protection plan—plus show you how to get <strong style="color: #FFB800;">$100,000-$500,000 in coverage</strong> for less than you spend on coffee.</p>
             </div>
 
             <div style="background: linear-gradient(135deg, rgba(0, 78, 137, 0.25), rgba(255, 184, 0, 0.12)); border: 2px solid #FFB800; padding: 18px 22px; border-radius: 12px; margin-bottom: 22px; text-align: left;">
@@ -1938,11 +1938,11 @@
                 ]
             },
 
-            // PHASE 3: REALITY
+            // PHASE 3: REALITY — single qualifying signal of buying capacity
             {
                 phase: 3,
                 phaseLabel: "STEP 3 OF 5 · REALITY CHECK",
-                number: 3,
+                number: 2,
                 text: "On a typical month, how do you handle your finances?",
                 options: [
                     "I tend to live paycheck to paycheck",
@@ -1951,24 +1951,12 @@
                     "I save consistently every month and have money set aside"
                 ]
             },
-            {
-                phase: 3,
-                phaseLabel: "STEP 3 OF 5 · REALITY CHECK",
-                number: 4,
-                text: "How often do rising costs (fuel, food, rent) stress you out?",
-                options: [
-                    "Daily — I'm constantly worried about making ends meet",
-                    "Sometimes — when big bills hit all at once",
-                    "Monthly — when I see how little is left after expenses",
-                    "Occasionally — but I manage to stay afloat"
-                ]
-            },
 
-            // PHASE 4: TRUTH
+            // PHASE 4: TRUTH — one fear question + one pitch-anchor question
             {
                 phase: 4,
                 phaseLabel: "STEP 4 OF 5 · THE TRUTH",
-                number: 5,
+                number: 3,
                 text: "My biggest financial fear is...",
                 options: [
                     "Getting sick or injured and losing everything I've worked for",
@@ -1980,21 +1968,7 @@
             {
                 phase: 4,
                 phaseLabel: "STEP 4 OF 5 · THE TRUTH",
-                number: 6,
-                text: "When it comes to protecting my family, I'm afraid that...",
-                options: [
-                    "I've waited too long and it's too late to get coverage",
-                    "I can't afford the premiums on a trucker's income",
-                    "My health issues will disqualify me from getting approved",
-                    "Even if I get coverage, it won't actually help when I need it"
-                ]
-            },
-
-            // PHASE 5: PRESSURE-RELEASE (last value question before PII)
-            {
-                phase: 4,
-                phaseLabel: "STEP 4 OF 5 · THE TRUTH",
-                number: 7,
+                number: 4,
                 text: "What I'm really looking for is...",
                 options: [
                     "Coverage that pays me while I'm ALIVE, not just when I die",
@@ -2008,7 +1982,7 @@
             {
                 phase: 4,
                 phaseLabel: "STEP 4 OF 5 · QUICK CHECK",
-                number: 8,
+                number: 5,
                 text: "Have you been diagnosed with heart disease, stroke, cancer, or diabetes in the last 5 years?",
                 subtext: "Honest answers help us match you with the right carrier — many drivers with conditions still qualify.",
                 options: [
@@ -2017,12 +1991,12 @@
                 ]
             },
 
-            // PHASE 6: PII (framed as "where to send your plan")
+            // PHASE 5: PII (framed as "where to send your plan")
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 9,
-                text: "Where should we send your personalized plan? First, your name:",
+                number: 6,
+                text: "What's your first name?",
                 type: "text",
                 placeholder: "First name",
                 inputType: "name"
@@ -2030,7 +2004,16 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 10,
+                number: 7,
+                text: "And your last name?",
+                type: "text",
+                placeholder: "Last name",
+                inputType: "lastName"
+            },
+            {
+                phase: 5,
+                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
+                number: 8,
                 text: "What's your date of birth?",
                 subtext: "We use this to calculate your exact coverage and locked-in rate.",
                 type: "text",
@@ -2040,19 +2023,20 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 11,
+                number: 9,
                 text: "What email should we send your plan to?",
                 subtext: "We'll email your personalized financial protection plan here.",
                 type: "text",
                 placeholder: "you@example.com",
                 inputType: "email"
             },
+            // Preface — sets expectation right before asking for phone
             {
                 phase: 5,
-                phaseLabel: "STEP 5 OF 5 · YOUR PLAN IS READY",
-                number: 12,
+                phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
+                number: 10,
                 text: "Would you prefer a phone call or video call to walk through your plan?",
-                subtext: "Pick whichever's easier for you — your specialist will reach out the way you want.",
+                subtext: "Pick whichever's easier — we'll reach out the way you want.",
                 options: [
                     "Phone call",
                     "Video call (Zoom or FaceTime)"
@@ -2061,7 +2045,7 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
-                number: 13,
+                number: 11,
                 text: "Best phone number to reach you?",
                 subtext: "We'll contact you to walk through your personalized plan — make sure it's correct.",
                 type: "text",
@@ -2071,20 +2055,7 @@
             {
                 phase: 5,
                 phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
-                number: 14,
-                text: "What's your approximate annual income?",
-                options: [
-                    "Under $40,000",
-                    "$40,000 - $60,000",
-                    "$60,000 - $80,000",
-                    "$80,000 - $100,000",
-                    "Over $100,000"
-                ]
-            },
-            {
-                phase: 5,
-                phaseLabel: "STEP 5 OF 5 · ALMOST THERE",
-                number: 15,
+                number: 12,
                 text: "How much can you comfortably set aside each month for your protection plan?",
                 subtext: "Most truckers we work with budget $200–$800/month for full coverage.",
                 options: [
@@ -2098,7 +2069,7 @@
             {
                 phase: 5,
                 phaseLabel: "FINAL STEP",
-                number: 16,
+                number: 13,
                 text: "Last one — what's your zip code?",
                 type: "text",
                 placeholder: "Zip code",
@@ -2115,24 +2086,21 @@
         let questionStartTs = 0;
 
         // Slug for each question — used to flatten answers into Sheet columns.
-        // Headers in your Sheet will look like: q1_trucker_status, q2_family_future, ...
+        // Headers in your Sheet will look like: q1_trucker_status, q2_monthly_finances, ...
         const QUESTION_SLUGS = {
             1: "trucker_status",
-            2: "family_future",
-            3: "monthly_finances",
-            4: "cost_stress",
-            5: "biggest_fear",
-            6: "protection_fear",
-            7: "looking_for",
-            8: "health_conditions",
-            9: "first_name",
-            10: "dob",
-            11: "email",
-            12: "call_preference",
-            13: "phone",
-            14: "income",
-            15: "monthly_budget",
-            16: "zip"
+            2: "monthly_finances",
+            3: "biggest_fear",
+            4: "looking_for",
+            5: "health_conditions",
+            6: "first_name",
+            7: "last_name",
+            8: "dob",
+            9: "email",
+            10: "call_preference",
+            11: "phone",
+            12: "monthly_budget",
+            13: "zip"
         };
 
         function answersToFlatColumns(answersArray) {
@@ -2500,6 +2468,7 @@
                 const autocomplete =
                     q.inputType === 'phone' ? 'tel' :
                     q.inputType === 'name' ? 'given-name' :
+                    q.inputType === 'lastName' ? 'family-name' :
                     q.inputType === 'email' ? 'email' :
                     q.inputType === 'zipcode' ? 'postal-code' : 'off';
                 const inputType =
@@ -2656,6 +2625,7 @@
             }
 
             if (q.inputType === 'name') userData.firstName = value;
+            if (q.inputType === 'lastName') userData.lastName = value;
             if (q.inputType === 'email') {
                 userData.email = value;
                 fireConversion("Lead", { content_name: "Email Captured" });

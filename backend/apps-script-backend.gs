@@ -54,42 +54,43 @@ const RINGY_AUTH_TOKEN = "";
 const CLIENT_SHEET_ID = "";
 
 // Columns the client/buyer sees. Edit this list to control what's exposed.
-// (Keys reference the flattened payload — q1_trucker_status, userData_email, etc.)
+// Keys reference the flattened payload — userData_*, q<N>_<slug>, notes.
 // "notes" is synthesized at write time, see writeClientRow below.
 //
-// NOTE: question numbers were renumbered when we added health (Q8),
-// call_preference (Q12), and monthly_budget (Q15). Keep these in sync with
-// QUESTION_SLUGS in index.html.
+// Quiz is currently 13 questions. Keep these in sync with QUESTION_SLUGS
+// in index.html if you change the quiz structure.
 const CLIENT_COLUMNS = [
   "userData_firstName",
+  "userData_lastName",
   "userData_phone",
   "userData_email",
   "userData_dob",
   "userData_zip",
-  "q14_income",
-  "q15_monthly_budget",
   "q1_trucker_status",
-  "q8_health_conditions",
-  "q12_call_preference",
-  "q5_biggest_fear",
-  "q7_looking_for",
+  "q2_monthly_finances",
+  "q12_monthly_budget",
+  "q5_health_conditions",
+  "q10_call_preference",
+  "q3_biggest_fear",
+  "q4_looking_for",
   "notes"
 ];
 
 // Friendlier column names for the Client_Leads sheet.
 const CLIENT_COLUMN_LABELS = {
   userData_firstName: "First Name",
+  userData_lastName: "Last Name",
   userData_phone: "Phone",
   userData_email: "Email",
   userData_dob: "Date of Birth",
   userData_zip: "Zip",
-  q14_income: "Income",
-  q15_monthly_budget: "Monthly Budget",
   q1_trucker_status: "Driver Type",
-  q8_health_conditions: "Health Conditions",
-  q12_call_preference: "Call Preference",
-  q5_biggest_fear: "Biggest Fear",
-  q7_looking_for: "Looking For",
+  q2_monthly_finances: "Monthly Finances",
+  q12_monthly_budget: "Monthly Budget",
+  q5_health_conditions: "Health Conditions",
+  q10_call_preference: "Call Preference",
+  q3_biggest_fear: "Biggest Fear",
+  q4_looking_for: "Looking For",
   notes: "Notes"
 };
 
@@ -228,18 +229,19 @@ function pushToRingy(flat) {
     // Ringy's canonical phone field is "phone_number", not "phone".
     phone_number: flat.userData_phone || "",
     first_name: flat.userData_firstName || "",
+    last_name: flat.userData_lastName || "",
     email: flat.userData_email || "",
     date_of_birth: flat.userData_dob || "",
     zip: flat.userData_zip || "",
     // Ringy custom fields — your client must create these in their Ringy
     // account (Lead Sources → Custom Fields) for them to show up on the lead.
-    income: flat.q14_income || "",
-    monthly_budget: flat.q15_monthly_budget || "",
+    monthly_finances: flat.q2_monthly_finances || "",
+    monthly_budget: flat.q12_monthly_budget || "",
     driver_type: flat.q1_trucker_status || "",
-    health_conditions: flat.q8_health_conditions || "",
-    call_preference: flat.q12_call_preference || "",
-    biggest_fear: flat.q5_biggest_fear || "",
-    looking_for: flat.q7_looking_for || "",
+    health_conditions: flat.q5_health_conditions || "",
+    call_preference: flat.q10_call_preference || "",
+    biggest_fear: flat.q3_biggest_fear || "",
+    looking_for: flat.q4_looking_for || "",
     notes: LEAD_NOTES
   };
 
