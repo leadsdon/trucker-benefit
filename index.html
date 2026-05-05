@@ -2070,10 +2070,11 @@
                 phase: 5,
                 phaseLabel: "FINAL STEP",
                 number: 13,
-                text: "Last one — what's your zip code?",
+                text: "Last one — what state do you live in?",
+                subtext: "We use this to match you with a licensed agent in your state.",
                 type: "text",
-                placeholder: "Zip code",
-                inputType: "zipcode"
+                placeholder: "TX or Texas",
+                inputType: "state"
             }
         ];
 
@@ -2100,8 +2101,33 @@
             10: "call_preference",
             11: "phone",
             12: "monthly_budget",
-            13: "zip"
+            13: "state"
         };
+
+        // US state map for normalizing the Q13 input — accepts "TX" or "Texas",
+        // stores as 2-letter code so Ringy / Meta CAPI match keys are consistent.
+        const US_STATES = {
+            AL:"Alabama", AK:"Alaska", AZ:"Arizona", AR:"Arkansas", CA:"California",
+            CO:"Colorado", CT:"Connecticut", DE:"Delaware", FL:"Florida", GA:"Georgia",
+            HI:"Hawaii", ID:"Idaho", IL:"Illinois", IN:"Indiana", IA:"Iowa",
+            KS:"Kansas", KY:"Kentucky", LA:"Louisiana", ME:"Maine", MD:"Maryland",
+            MA:"Massachusetts", MI:"Michigan", MN:"Minnesota", MS:"Mississippi", MO:"Missouri",
+            MT:"Montana", NE:"Nebraska", NV:"Nevada", NH:"New Hampshire", NJ:"New Jersey",
+            NM:"New Mexico", NY:"New York", NC:"North Carolina", ND:"North Dakota", OH:"Ohio",
+            OK:"Oklahoma", OR:"Oregon", PA:"Pennsylvania", RI:"Rhode Island", SC:"South Carolina",
+            SD:"South Dakota", TN:"Tennessee", TX:"Texas", UT:"Utah", VT:"Vermont",
+            VA:"Virginia", WA:"Washington", WV:"West Virginia", WI:"Wisconsin", WY:"Wyoming",
+            DC:"District of Columbia"
+        };
+        function normalizeState(input) {
+            if (!input) return null;
+            const v = String(input).trim().toUpperCase();
+            if (US_STATES[v]) return v;
+            for (const code in US_STATES) {
+                if (US_STATES[code].toUpperCase() === v) return code;
+            }
+            return null;
+        }
 
         function answersToFlatColumns(answersArray) {
             const flat = {};
@@ -2470,6 +2496,7 @@
                     q.inputType === 'name' ? 'given-name' :
                     q.inputType === 'lastName' ? 'family-name' :
                     q.inputType === 'email' ? 'email' :
+                    q.inputType === 'state' ? 'address-level1' :
                     q.inputType === 'zipcode' ? 'postal-code' : 'off';
                 const inputType =
                     q.inputType === 'email' ? 'email' :
@@ -2607,6 +2634,11 @@
                 flagInvalid(input);
                 return;
             }
+            if (q.inputType === 'state') {
+                const normalized = normalizeState(value);
+                if (!normalized) { flagInvalid(input); return; }
+                value = normalized;
+            }
             if (q.inputType === 'dob') {
                 const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
                 if (!m) { flagInvalid(input); return; }
@@ -2631,7 +2663,7 @@
                 fireConversion("Lead", { content_name: "Email Captured" });
             }
             if (q.inputType === 'dob') userData.dob = value;
-            if (q.inputType === 'zipcode') userData.zip = value;
+            if (q.inputType === 'state') userData.state = value;
 
             const dwell_ms = questionStartTs ? Date.now() - questionStartTs : 0;
             trackEvent("question_answered", { number: q.number, inputType: q.inputType, dwell_ms });
@@ -3158,7 +3190,7 @@
                         <td>${(l.userData && l.userData.firstName) || ""}</td>
                         <td>${(l.userData && l.userData.email) || ""}</td>
                         <td>${(l.userData && l.userData.phone) || ""}</td>
-                        <td>${(l.userData && l.userData.zip) || ""}</td>
+                        <td>${(l.userData && (l.userData.state || l.userData.zip)) || ""}</td>
                         <td>${(l.answers && l.answers.length) || 0}</td>
                         <td>${fmtMs(l.time_to_complete_ms)}</td>
                     </tr>
@@ -3235,7 +3267,7 @@
                     </div>
                 </div>
                 <table class="admin-table admin-leads-table">
-                    <thead><tr><th>Saved</th><th>Status</th><th>Source</th><th>Name</th><th>Email</th><th>Phone</th><th>Zip</th><th>Answers</th><th>Time on Page</th></tr></thead>
+                    <thead><tr><th>Saved</th><th>Status</th><th>Source</th><th>Name</th><th>Email</th><th>Phone</th><th>State</th><th>Answers</th><th>Time on Page</th></tr></thead>
                     <tbody>${leadRows || '<tr><td colspan="9" class="admin-empty">No leads in this cohort yet.</td></tr>'}</tbody>
                 </table>
 

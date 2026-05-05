@@ -220,7 +220,7 @@ async function fireServerCapiForLead(payload, capiIds, ip, userAgent) {
         firstName: u.firstName,
         lastName: u.lastName,
         dob: u.dob,
-        zip: u.zip,
+        state: u.state,
         country: 'us',
         external_id: payload.visitor,
         fbp: payload.fbp,

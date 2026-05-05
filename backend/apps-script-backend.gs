@@ -65,7 +65,7 @@ const CLIENT_COLUMNS = [
   "userData_phone",
   "userData_email",
   "userData_dob",
-  "userData_zip",
+  "userData_state",
   "q1_trucker_status",
   "q2_monthly_finances",
   "q12_monthly_budget",
@@ -83,7 +83,7 @@ const CLIENT_COLUMN_LABELS = {
   userData_phone: "Phone",
   userData_email: "Email",
   userData_dob: "Date of Birth",
-  userData_zip: "Zip",
+  userData_state: "State",
   q1_trucker_status: "Driver Type",
   q2_monthly_finances: "Monthly Finances",
   q12_monthly_budget: "Monthly Budget",
@@ -232,7 +232,7 @@ function pushToRingy(flat) {
     last_name: flat.userData_lastName || "",
     email: flat.userData_email || "",
     date_of_birth: flat.userData_dob || "",
-    zip: flat.userData_zip || "",
+    state: flat.userData_state || "",
     // Ringy custom fields — your client must create these in their Ringy
     // account (Lead Sources → Custom Fields) for them to show up on the lead.
     monthly_finances: flat.q2_monthly_finances || "",
