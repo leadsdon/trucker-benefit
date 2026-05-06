@@ -2639,7 +2639,7 @@
         function submitTextAnswer() {
             lockQuiz();
             const input = document.getElementById('textInput');
-            const value = input.value.trim();
+            let value = input.value.trim();
             const q = questions[currentQuestion];
 
             if (value === '') {
