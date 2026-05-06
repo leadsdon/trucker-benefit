@@ -2072,9 +2072,61 @@
                 number: 13,
                 text: "Last one — what state do you live in?",
                 subtext: "We use this to match you with a licensed agent in your state.",
-                type: "text",
-                placeholder: "TX or Texas",
-                inputType: "state"
+                type: "select",
+                inputType: "state",
+                options: [
+                    { value: "AL", label: "Alabama" },
+                    { value: "AK", label: "Alaska" },
+                    { value: "AZ", label: "Arizona" },
+                    { value: "AR", label: "Arkansas" },
+                    { value: "CA", label: "California" },
+                    { value: "CO", label: "Colorado" },
+                    { value: "CT", label: "Connecticut" },
+                    { value: "DE", label: "Delaware" },
+                    { value: "DC", label: "District of Columbia" },
+                    { value: "FL", label: "Florida" },
+                    { value: "GA", label: "Georgia" },
+                    { value: "HI", label: "Hawaii" },
+                    { value: "ID", label: "Idaho" },
+                    { value: "IL", label: "Illinois" },
+                    { value: "IN", label: "Indiana" },
+                    { value: "IA", label: "Iowa" },
+                    { value: "KS", label: "Kansas" },
+                    { value: "KY", label: "Kentucky" },
+                    { value: "LA", label: "Louisiana" },
+                    { value: "ME", label: "Maine" },
+                    { value: "MD", label: "Maryland" },
+                    { value: "MA", label: "Massachusetts" },
+                    { value: "MI", label: "Michigan" },
+                    { value: "MN", label: "Minnesota" },
+                    { value: "MS", label: "Mississippi" },
+                    { value: "MO", label: "Missouri" },
+                    { value: "MT", label: "Montana" },
+                    { value: "NE", label: "Nebraska" },
+                    { value: "NV", label: "Nevada" },
+                    { value: "NH", label: "New Hampshire" },
+                    { value: "NJ", label: "New Jersey" },
+                    { value: "NM", label: "New Mexico" },
+                    { value: "NY", label: "New York" },
+                    { value: "NC", label: "North Carolina" },
+                    { value: "ND", label: "North Dakota" },
+                    { value: "OH", label: "Ohio" },
+                    { value: "OK", label: "Oklahoma" },
+                    { value: "OR", label: "Oregon" },
+                    { value: "PA", label: "Pennsylvania" },
+                    { value: "RI", label: "Rhode Island" },
+                    { value: "SC", label: "South Carolina" },
+                    { value: "SD", label: "South Dakota" },
+                    { value: "TN", label: "Tennessee" },
+                    { value: "TX", label: "Texas" },
+                    { value: "UT", label: "Utah" },
+                    { value: "VT", label: "Vermont" },
+                    { value: "VA", label: "Virginia" },
+                    { value: "WA", label: "Washington" },
+                    { value: "WV", label: "West Virginia" },
+                    { value: "WI", label: "Wisconsin" },
+                    { value: "WY", label: "Wyoming" }
+                ]
             }
         ];
 
@@ -2565,6 +2617,28 @@
                 document.getElementById('textInput').addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') submitTextAnswer();
                 });
+            } else if (q.type === 'select') {
+                // Dropdown — used for state question. Native picker on mobile,
+                // styled box on desktop. No keyboard, no validation friction.
+                container.innerHTML = `
+                    <div class="question active">
+                        <div class="question-text">${q.text}</div>
+                        ${subtextHtml}
+                        <div class="text-input-container">
+                            <select id="textInput" class="text-input">
+                                <option value="">Select your state…</option>
+                                ${q.options.map(opt => `<option value="${opt.value}">${opt.label}</option>`).join('')}
+                            </select>
+                            <button class="continue-button" onclick="submitTextAnswer()">
+                                CONTINUE →
+                            </button>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const el = document.getElementById('textInput');
+                    if (el) el.focus({ preventScroll: true });
+                }, 100);
             } else {
                 // Multiple choice
                 container.innerHTML = `
@@ -2635,9 +2709,12 @@
                 return;
             }
             if (q.inputType === 'state') {
+                // Try to normalize ('Texas' → 'TX'), but never BLOCK on
+                // unrecognized input — better to capture the lead with a
+                // slightly weird state value than lose them at the last step.
                 const normalized = normalizeState(value);
-                if (!normalized) { flagInvalid(input); return; }
-                value = normalized;
+                value = normalized || String(value).trim().toUpperCase();
+                if (!value) { flagInvalid(input); return; }
             }
             if (q.inputType === 'dob') {
                 const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
