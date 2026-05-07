@@ -17,6 +17,10 @@ const { assessLeadQuality } = require('../lib/lead-quality.js');
 const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+// Optional generic outbound webhook(s). Comma-separate to fan out to multiple
+// URLs (Zapier + Make + your CRM, all at once). Receives every lead as JSON.
+const OUTBOUND_LEAD_WEBHOOKS = (process.env.OUTBOUND_LEAD_WEBHOOKS || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [0, 500, 1500];
 
@@ -57,6 +61,25 @@ async function forwardToAppsScript(payload) {
         }
     }
     return { ok: false, error: lastError };
+}
+
+async function fanOutToWebhooks(payload) {
+    if (!OUTBOUND_LEAD_WEBHOOKS.length) return { ok: false, error: 'no_webhooks_configured' };
+    const body = JSON.stringify(payload);
+    const results = await Promise.all(OUTBOUND_LEAD_WEBHOOKS.map(async url => {
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: body
+            });
+            return { url, ok: resp.status >= 200 && resp.status < 300, status: resp.status };
+        } catch (err) {
+            return { url, ok: false, error: String(err && err.message || err) };
+        }
+    }));
+    const ok = results.some(r => r.ok);
+    return { ok, results };
 }
 
 async function writeToSupabase(payload) {
@@ -142,12 +165,22 @@ module.exports = async function handler(req, res) {
     // Server-side CAPI firing here (instead of from the browser on
     // /thank-you.html) is what fixes Meta's "low coverage" warning — these
     // requests don't get cancelled by the user navigating to call-now etc.
+    const isLead = kind === 'lead';
     const writes = [
         writeToSupabase(enriched),
         forwardToAppsScript(enriched)
     ];
 
-    const isLead = kind === 'lead';
+    // Fan out leads to any configured generic outbound webhooks (Zapier,
+    // Make, the buyer's intake URL, etc.). Independent of Apps Script /
+    // Ringy / Supabase — purely additional fan-out for downstream automations.
+    if (isLead && OUTBOUND_LEAD_WEBHOOKS.length) {
+        writes.push(fanOutToWebhooks(enriched));
+    } else {
+        // keep array index alignment for the destructure below
+        writes.push(Promise.resolve({ ok: false, error: 'skipped' }));
+    }
+
     const capiIds = (payload && payload.capi_event_ids) || {};
     let qualityCheck = null;
 
@@ -164,9 +197,9 @@ module.exports = async function handler(req, res) {
     }
 
     const results = await Promise.all(writes);
-    const [supabaseResult, appsScriptResult, capiResult] = results;
+    const [supabaseResult, appsScriptResult, webhookResult, capiResult] = results;
 
-    const okAny = supabaseResult.ok || appsScriptResult.ok;
+    const okAny = supabaseResult.ok || appsScriptResult.ok || (webhookResult && webhookResult.ok);
     let capiInfo;
     if (!isLead || !capiIds.lead) {
         capiInfo = 'capi=skipped';
@@ -178,22 +211,28 @@ module.exports = async function handler(req, res) {
         capiInfo = 'capi=unknown';
     }
 
+    const webhookInfo = (isLead && OUTBOUND_LEAD_WEBHOOKS.length)
+        ? `webhooks=${webhookResult && webhookResult.ok ? 'ok(' + (webhookResult.results || []).filter(r => r.ok).length + '/' + (webhookResult.results || []).length + ')' : 'err'}`
+        : 'webhooks=none';
+
     if (okAny) {
-        console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error} ${capiInfo}`);
+        console.log(`[api/lead] kind=${kind} supabase=${supabaseResult.ok ? 'ok' : 'err:' + supabaseResult.error} apps_script=${appsScriptResult.ok ? 'ok attempt=' + appsScriptResult.attempt : 'err:' + appsScriptResult.error} ${capiInfo} ${webhookInfo}`);
         return res.status(200).json({
             ok: true,
             supabase: supabaseResult.ok,
             apps_script: appsScriptResult.ok,
             apps_script_attempt: appsScriptResult.attempt,
+            outbound_webhooks: webhookResult && webhookResult.results,
             capi_lead: capiResult && capiResult.lead && capiResult.lead.ok,
             quality: qualityCheck
         });
     } else {
-        console.error(`[api/lead] BOTH FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error} ${capiInfo}`);
+        console.error(`[api/lead] ALL FAILED kind=${kind} supabase=${supabaseResult.error} apps_script=${appsScriptResult.error} ${capiInfo} ${webhookInfo}`);
         return res.status(502).json({
             error: 'all_destinations_failed',
             supabase: supabaseResult.error,
-            apps_script: appsScriptResult.error
+            apps_script: appsScriptResult.error,
+            webhooks: webhookResult && webhookResult.results
         });
     }
 };
