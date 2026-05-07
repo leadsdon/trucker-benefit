@@ -3179,6 +3179,25 @@
                     </tr>
                 `).join("");
 
+            // Leads by source — pulled directly from the leads table in
+            // Supabase (source of truth). Catches manual/backfilled leads
+            // that may not have associated events.
+            const leadsBySrc = {};
+            leads.forEach(l => {
+                const src = (l.source || "(unknown)").toString();
+                leadsBySrc[src] = (leadsBySrc[src] || 0) + 1;
+            });
+            const totalLeadsBySrc = leads.length;
+            const leadsBySrcRows = Object.entries(leadsBySrc)
+                .sort((a,b) => b[1] - a[1])
+                .map(([src, count]) => `
+                    <tr>
+                        <td><strong>${src.replace(/</g, "&lt;")}</strong></td>
+                        <td>${count}</td>
+                        <td>${totalLeadsBySrc ? ((count / totalLeadsBySrc) * 100).toFixed(1) + '%' : '—'}</td>
+                    </tr>
+                `).join("");
+
             // Lead rows (newest first), with expandable detail
             const leadRows = leads.slice().sort((a,b) => (b.savedAtTs||0) - (a.savedAtTs||0)).map(l => {
                 const id = l.visitor + ":" + l.savedAtTs;
@@ -3284,8 +3303,15 @@
                     <tbody>${funnelRows.join("")}</tbody>
                 </table>
 
-                <h2>Attribution · By Source</h2>
-                <p class="admin-note">Source = utm_source if present, else inferred from click ID (fbclid → facebook, gclid → google), else referrer hostname, else "direct".</p>
+                <h2>Conversions · Leads by Source</h2>
+                <p class="admin-note">Pulled directly from the Supabase <code>leads</code> table — captures every lead, including manual/backfilled records that may not have events.</p>
+                <table class="admin-table">
+                    <thead><tr><th>Source</th><th>Leads</th><th>% of total</th></tr></thead>
+                    <tbody>${leadsBySrcRows || '<tr><td colspan="3" class="admin-empty">No leads in this cohort yet.</td></tr>'}</tbody>
+                </table>
+
+                <h2>Attribution · Funnel by Source</h2>
+                <p class="admin-note">Pulled from event stream. Source = utm_source if present, else inferred from click ID (fbclid → facebook, gclid → google), else referrer hostname, else "direct".</p>
                 <table class="admin-table">
                     <thead><tr><th>Source</th><th>Visitors</th><th>Starts</th><th>Completes</th><th>Calls</th><th>Start CR</th><th>Complete CR</th><th>Visitor→Call</th></tr></thead>
                     <tbody>${sourceRows || '<tr><td colspan="8" class="admin-empty">No traffic in this cohort yet.</td></tr>'}</tbody>
