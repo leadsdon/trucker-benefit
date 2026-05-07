@@ -3058,7 +3058,7 @@
             if (remote && (remote.events || remote.leads)) {
                 allEvents = (remote.events || []).map(unflattenRow);
                 allLeads = (remote.leads || []).map(unflattenRow);
-                dataSource = "remote (Sheet)";
+                dataSource = "Supabase (live)";
             } else {
                 allEvents = localEvents;
                 allLeads = localLeads;
