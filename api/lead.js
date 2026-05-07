@@ -63,9 +63,82 @@ async function forwardToAppsScript(payload) {
     return { ok: false, error: lastError };
 }
 
+// Flatten the lead into the shape GoHighLevel / Zapier / Make / most CRMs
+// expect: email + phone at top-level (GHL won't create a contact without
+// at least one of those), plus camelCase + snake_case duplicates for
+// flexibility, plus quiz answers as named custom fields.
+function buildWebhookPayload(payload) {
+    const u  = payload.userData     || {};
+    const ft = payload.first_touch  || {};
+    const tc = payload.tcpa_consent || {};
+
+    const firstName = u.firstName || '';
+    const lastName  = u.lastName  || '';
+    const fullName  = (firstName + ' ' + lastName).trim();
+
+    return {
+        // ─── Differentiation fields (GHL requires email or phone) ───
+        email: u.email || '',
+        phone: u.phone || '',
+
+        // ─── Standard contact fields, both camelCase + snake_case ───
+        firstName: firstName,
+        first_name: firstName,
+        lastName: lastName,
+        last_name: lastName,
+        name: fullName,
+        full_name: fullName,
+        dateOfBirth: u.dob || '',
+        date_of_birth: u.dob || '',
+        state: u.state || '',
+        age: u.age || null,
+
+        // ─── Quiz answers as flat custom fields (no q-prefix) ───
+        trucker_status:    payload.q1_trucker_status    || '',
+        monthly_finances:  payload.q2_monthly_finances  || '',
+        biggest_fear:      payload.q3_biggest_fear      || '',
+        looking_for:       payload.q4_looking_for       || '',
+        health_conditions: payload.q5_health_conditions || '',
+        call_preference:   payload.q10_call_preference  || '',
+        monthly_budget:    payload.q12_monthly_budget   || '',
+
+        // ─── Attribution ───
+        source:        payload.source         || '',
+        utm_source:    ft.utm_source          || '',
+        utm_medium:    ft.utm_medium          || '',
+        utm_campaign:  ft.utm_campaign        || '',
+        utm_content:   ft.utm_content         || '',
+        utm_term:      ft.utm_term            || '',
+        fbclid:        ft.fbclid              || '',
+        gclid:         ft.gclid               || '',
+        ttclid:        ft.ttclid              || '',
+        referrer:      ft.referrer            || '',
+        landing_path:  ft.landing_path        || '',
+
+        // ─── TCPA / consent ───
+        tcpa_consent_accepted:   tc.accepted ? 'yes' : 'no',
+        tcpa_consent_timestamp:  tc.ts || '',
+        trustedform_cert_url:    payload.trustedform_cert_url || '',
+
+        // ─── Operator notes (free-text, agent-facing) ───
+        notes: 'Trucker Benefit assessment lead. Driver: ' + (payload.q1_trucker_status || '?') +
+               ' | Health: ' + (payload.q5_health_conditions || '?') +
+               ' | Budget: ' + (payload.q12_monthly_budget || '?') +
+               ' | Wants: ' + (payload.q10_call_preference || '?'),
+
+        // ─── Server context ───
+        ip:           payload.proxy_ip           || '',
+        user_agent:   payload.proxy_user_agent   || '',
+        received_at:  payload.proxy_received_at  || new Date().toISOString(),
+        visitor_id:   payload.visitor || '',
+        session_id:   payload.session || ''
+    };
+}
+
 async function fanOutToWebhooks(payload) {
     if (!OUTBOUND_LEAD_WEBHOOKS.length) return { ok: false, error: 'no_webhooks_configured' };
-    const body = JSON.stringify(payload);
+    const flat = buildWebhookPayload(payload);
+    const body = JSON.stringify(flat);
     const results = await Promise.all(OUTBOUND_LEAD_WEBHOOKS.map(async url => {
         try {
             const resp = await fetch(url, {
