@@ -239,19 +239,31 @@ module.exports = async function handler(req, res) {
     // /thank-you.html) is what fixes Meta's "low coverage" warning — these
     // requests don't get cancelled by the user navigating to call-now etc.
     const isLead = kind === 'lead';
-    const writes = [
-        writeToSupabase(enriched),
-        forwardToAppsScript(enriched)
-    ];
 
-    // Fan out leads to any configured generic outbound webhooks (Zapier,
-    // Make, the buyer's intake URL, etc.). Independent of Apps Script /
-    // Ringy / Supabase — purely additional fan-out for downstream automations.
-    if (isLead && OUTBOUND_LEAD_WEBHOOKS.length) {
+    // Phone is the differentiation field for every downstream system
+    // (Ringy, GHL/LeadConnector, Meta CAPI all require it for matching).
+    // A lead without phone is unusable to the buyer — save it for our
+    // own records but DO NOT forward externally. This blocks partial leads
+    // captured via beforeunload (where the user bailed before Q11).
+    const phoneDigits = (payload.userData && payload.userData.phone || '').replace(/\D/g, '');
+    const hasUsablePhone = phoneDigits.length >= 10;
+    const leadMissingPhone = isLead && !hasUsablePhone;
+
+    const writes = [writeToSupabase(enriched)];
+
+    // Apps Script: always forwards events; only forwards leads if usable.
+    if (!isLead || hasUsablePhone) {
+        writes.push(forwardToAppsScript(enriched));
+    } else {
+        writes.push(Promise.resolve({ ok: false, error: 'lead_missing_phone_not_forwarded' }));
+        console.log(`[api/lead] Lead missing phone — saved to Supabase only, NOT forwarded to Apps Script/Ringy/GHL/CAPI. visitor=${payload.visitor}`);
+    }
+
+    // Outbound webhooks (GHL etc.) — only for leads with a real phone
+    if (isLead && hasUsablePhone && OUTBOUND_LEAD_WEBHOOKS.length) {
         writes.push(fanOutToWebhooks(enriched));
     } else {
-        // keep array index alignment for the destructure below
-        writes.push(Promise.resolve({ ok: false, error: 'skipped' }));
+        writes.push(Promise.resolve({ ok: false, error: leadMissingPhone ? 'lead_missing_phone' : 'skipped' }));
     }
 
     const capiIds = (payload && payload.capi_event_ids) || {};
@@ -262,7 +274,7 @@ module.exports = async function handler(req, res) {
     const TEST_SOURCES = ['test', 'debug', 'smoketest', 'webhook_proof', 'webhook_flat_test', 'pre_launch', 'manual_backfill'];
     const isTestSource = TEST_SOURCES.indexOf(payload.source) !== -1;
 
-    if (isLead && capiIds.lead && !isTestSource) {
+    if (isLead && capiIds.lead && !isTestSource && hasUsablePhone) {
         qualityCheck = assessLeadQuality(payload);
         if (qualityCheck.ok) {
             writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
@@ -274,6 +286,8 @@ module.exports = async function handler(req, res) {
         }
     } else if (isLead && capiIds.lead && isTestSource) {
         console.log(`[api/lead] CAPI skipped — test source: ${payload.source}`);
+    } else if (leadMissingPhone) {
+        console.log(`[api/lead] CAPI skipped — lead missing phone`);
     }
 
     const results = await Promise.all(writes);
