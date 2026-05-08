@@ -257,7 +257,12 @@ module.exports = async function handler(req, res) {
     const capiIds = (payload && payload.capi_event_ids) || {};
     let qualityCheck = null;
 
-    if (isLead && capiIds.lead) {
+    // Don't fire CAPI for ANY test/internal source. These would otherwise
+    // pollute Meta's conversion count and inflate apparent CPL/ROAS.
+    const TEST_SOURCES = ['test', 'debug', 'smoketest', 'webhook_proof', 'webhook_flat_test', 'pre_launch', 'manual_backfill'];
+    const isTestSource = TEST_SOURCES.indexOf(payload.source) !== -1;
+
+    if (isLead && capiIds.lead && !isTestSource) {
         qualityCheck = assessLeadQuality(payload);
         if (qualityCheck.ok) {
             writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
@@ -267,6 +272,8 @@ module.exports = async function handler(req, res) {
             // submissions, which keeps your CPL accurate as you scale.
             console.log(`[api/lead] CAPI skipped — lead failed quality check: ${qualityCheck.reasons.join(', ')}`);
         }
+    } else if (isLead && capiIds.lead && isTestSource) {
+        console.log(`[api/lead] CAPI skipped — test source: ${payload.source}`);
     }
 
     const results = await Promise.all(writes);
