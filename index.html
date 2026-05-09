@@ -3115,20 +3115,30 @@
             const medianScroll = median(sessionEnds.map(e => e.data.max_scroll || 0));
             const scroll75 = events.filter(e => e.name === "scroll" && e.data.depth >= 75).length;
 
-            // Funnel by question
-            const viewsByQ = {}, answersByQ = {}, dwellByQ = {};
+            // Funnel by question — count UNIQUE visitors per question, not
+            // raw events. Otherwise refreshes / back-navigation inflate
+            // viewed counts and the funnel ends up nonsensical (e.g. Q2
+            // viewed > Q1 answered).
+            const viewVisitorsByQ = {}, answerVisitorsByQ = {}, dwellByQ = {};
             events.forEach(e => {
                 const n = e.data && e.data.number;
-                if (!n) return;
-                if (e.name === "question_view") viewsByQ[n] = (viewsByQ[n] || 0) + 1;
+                if (!n || !e.visitor) return;
+                if (e.name === "question_view") {
+                    if (!viewVisitorsByQ[n]) viewVisitorsByQ[n] = new Set();
+                    viewVisitorsByQ[n].add(e.visitor);
+                }
                 if (e.name === "question_answered") {
-                    answersByQ[n] = (answersByQ[n] || 0) + 1;
+                    if (!answerVisitorsByQ[n]) answerVisitorsByQ[n] = new Set();
+                    answerVisitorsByQ[n].add(e.visitor);
                     if (e.data.dwell_ms) {
                         if (!dwellByQ[n]) dwellByQ[n] = [];
                         dwellByQ[n].push(e.data.dwell_ms);
                     }
                 }
             });
+            const viewsByQ = {}, answersByQ = {};
+            Object.keys(viewVisitorsByQ).forEach(n => { viewsByQ[n] = viewVisitorsByQ[n].size; });
+            Object.keys(answerVisitorsByQ).forEach(n => { answersByQ[n] = answerVisitorsByQ[n].size; });
             const totalQs = questions.length;
             const firstQViews = viewsByQ[1] || 0;
             const funnelRows = [];
