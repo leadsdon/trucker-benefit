@@ -240,6 +240,11 @@ module.exports = async function handler(req, res) {
     // requests don't get cancelled by the user navigating to call-now etc.
     const isLead = kind === 'lead';
 
+    // Defensive: a few sources are reserved for internal smoke tests and
+    // should never reach external systems even if accidentally fired in a loop.
+    const HARD_BLOCKED_SOURCES = ['smoketest', 'deploy_check', 'webhook_proof', 'debug'];
+    const isHardBlocked = HARD_BLOCKED_SOURCES.indexOf(payload.source) !== -1;
+
     // Phone is the differentiation field for every downstream system
     // (Ringy, GHL/LeadConnector, Meta CAPI all require it for matching).
     // A lead without phone is unusable to the buyer — save it for our
@@ -248,6 +253,13 @@ module.exports = async function handler(req, res) {
     const phoneDigits = (payload.userData && payload.userData.phone || '').replace(/\D/g, '');
     const hasUsablePhone = phoneDigits.length >= 10;
     const leadMissingPhone = isLead && !hasUsablePhone;
+
+    // Hard-blocked sources never write ANYWHERE — drop on the floor.
+    // Stops accidental smoke-test loops from polluting the database.
+    if (isHardBlocked) {
+        console.log(`[api/lead] HARD BLOCKED — source=${payload.source} dropped without any writes`);
+        return res.status(200).json({ ok: true, hard_blocked: true, source: payload.source });
+    }
 
     const writes = [writeToSupabase(enriched)];
 

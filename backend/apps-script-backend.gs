@@ -110,6 +110,91 @@ const LEAD_NOTES = "Trucker Benefit financial protection assessment — complete
  * Look at the Execution Log (View → Logs / Cmd+Enter) for ✅ marks. Any ❌
  * means that capability isn't granted yet.
  */
+/**
+ * One-shot cleanup. Run this from the editor (▶ button) to remove all
+ * DeployCheck / smoketest / test rows from BOTH the master sheet and
+ * the separate client sheet. Useful after a runaway test loop.
+ *
+ * Look at View → Logs after running for a row-count summary.
+ */
+function cleanupTestRows() {
+  const JUNK_NAMES = ['DeployCheck', 'TEST_DRIVER', 'TEST_DRIVER_2', 'TEST_CAPI',
+    'REAL_LEAD', 'FAKE_PHONE', 'AUTH_TEST', 'AUTH', 'WebhookCheck',
+    'WebhookVerify', 'WEBHOOK_PROOF', 'GHL_FIX', 'DEBUG', 'VERIFY', 'CAPI_BLOCK',
+    'WebhookFull', 'WebhookVerifyPostDeploy', 'James'];
+  const JUNK_SOURCES = ['test', 'debug', 'smoketest', 'webhook_proof',
+    'webhook_flat_test', 'webhook_full_test', 'manual_backfill'];
+
+  let totalRemoved = 0;
+
+  // Master sheet — Leads + Events tabs
+  const master = SpreadsheetApp.getActiveSpreadsheet();
+  ['Leads', 'Events'].forEach(function(tabName) {
+    const sheet = master.getSheetByName(tabName);
+    if (!sheet) return;
+    const removed = wipeJunkRows(sheet, JUNK_NAMES, JUNK_SOURCES);
+    Logger.log('Master sheet "' + tabName + '": removed ' + removed + ' rows');
+    totalRemoved += removed;
+  });
+
+  // Client sheet (separate file) — Leads tab
+  if (CLIENT_SHEET_ID) {
+    try {
+      const client = SpreadsheetApp.openById(CLIENT_SHEET_ID);
+      const sheet = client.getSheetByName('Leads');
+      if (sheet) {
+        const removed = wipeJunkRows(sheet, JUNK_NAMES, JUNK_SOURCES);
+        Logger.log('Client sheet "Leads": removed ' + removed + ' rows');
+        totalRemoved += removed;
+      }
+    } catch (err) {
+      Logger.log('Could not access client sheet: ' + err);
+    }
+  }
+
+  Logger.log('TOTAL ROWS REMOVED: ' + totalRemoved);
+}
+
+/**
+ * Helper for cleanupTestRows. Walks the sheet from the bottom up and
+ * deletes any row whose first-name or source matches a junk pattern.
+ * Returns the number of rows deleted.
+ */
+function wipeJunkRows(sheet, junkNames, junkSources) {
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  if (lastRow < 2 || lastCol < 1) return 0;
+
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+  // Find columns we'll match against
+  const nameCols = [];
+  const sourceCols = [];
+  headers.forEach(function(h, i) {
+    const lower = String(h).toLowerCase();
+    if (lower.indexOf('firstname') !== -1 || lower.indexOf('first_name') !== -1 || lower === 'first name') nameCols.push(i);
+    if (lower === 'source') sourceCols.push(i);
+  });
+
+  // Iterate bottom-up so deleting rows doesn't shift subsequent indices
+  let removed = 0;
+  for (let i = data.length - 1; i >= 0; i--) {
+    const row = data[i];
+    const firstName = nameCols.length ? String(row[nameCols[0]] || '') : '';
+    const source = sourceCols.length ? String(row[sourceCols[0]] || '') : '';
+
+    const nameMatch = junkNames.some(function(j) { return firstName.indexOf(j) === 0; });
+    const sourceMatch = junkSources.indexOf(source) !== -1;
+
+    if (nameMatch || sourceMatch) {
+      sheet.deleteRow(i + 2); // +2: 1-indexed + skip header
+      removed++;
+    }
+  }
+  return removed;
+}
+
 function testAuth() {
   Logger.log('Running auth test...');
 
