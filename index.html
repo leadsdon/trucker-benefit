@@ -1238,6 +1238,109 @@
         .admin-table .admin-caution { color: #FFB800; font-weight: 600; }
         .admin-table .admin-good { color: #2BC76A; font-weight: 700; }
 
+        /* Funnel summary block — sits above the table */
+        .admin-funnel-summary {
+            background: linear-gradient(135deg, rgba(255, 184, 0, 0.08), rgba(43, 199, 106, 0.05));
+            border: 1px solid rgba(255, 184, 0, 0.2);
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin: 16px 0 20px;
+        }
+        .admin-funnel-summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .admin-funnel-stat {
+            text-align: center;
+            flex: 1 1 160px;
+        }
+        .admin-funnel-stat-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 56px;
+            line-height: 1;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+        .admin-funnel-stat-label {
+            font-size: 13px;
+            color: #B8BFD0;
+            margin-top: 6px;
+            line-height: 1.3;
+        }
+        .admin-funnel-stat-label small {
+            color: #888;
+            font-size: 11px;
+        }
+        .admin-funnel-stat-hi .admin-funnel-stat-num {
+            color: #FFB800;
+            font-size: 64px;
+        }
+        .admin-funnel-arrow {
+            font-size: 36px;
+            color: #555;
+            font-weight: 300;
+        }
+        .admin-funnel-worst {
+            margin-top: 18px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-funnel-worst-label {
+            font-size: 12px;
+            color: #FF6B6B;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+        .admin-funnel-worst-pill {
+            background: rgba(255, 107, 107, 0.15);
+            color: #FF8A8A;
+            padding: 5px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Per-row reach bar inside the funnel table cells */
+        .admin-funnel-bar {
+            position: relative;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            height: 28px;
+            min-width: 140px;
+            max-width: 280px;
+            overflow: hidden;
+        }
+        .admin-funnel-bar::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: var(--w, 0%);
+            background: var(--c, #FFB800);
+            opacity: 0.45;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+        .admin-funnel-bar-label {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+
         .admin-pill {
             display: inline-block;
             background: #2A3142;
@@ -3141,6 +3244,23 @@
             Object.keys(answerVisitorsByQ).forEach(n => { answersByQ[n] = answerVisitorsByQ[n].size; });
             const totalQs = questions.length;
             const firstQViews = viewsByQ[1] || 0;
+            const lastQAnswered = answersByQ[totalQs] || 0;
+            const overallCompletionPct = firstQViews ? ((lastQAnswered / firstQViews) * 100).toFixed(1) : '0.0';
+
+            // Find worst-drop-off questions (answered → next-viewed)
+            // Computed step-by-step: at each Q, what % of viewers go to next Q?
+            const dropOffByStep = [];
+            for (let n = 1; n <= totalQs; n++) {
+                const v = viewsByQ[n] || 0;
+                const nextV = viewsByQ[n + 1] || 0;
+                if (v > 0) {
+                    const lostHere = v - nextV;
+                    const lostPct = (lostHere / v) * 100;
+                    dropOffByStep.push({ q: n, lostHere, lostPct, viewed: v });
+                }
+            }
+            const worstDrops = dropOffByStep.slice().sort((a, b) => b.lostPct - a.lostPct).slice(0, 3);
+
             const funnelRows = [];
             for (let n = 1; n <= totalQs; n++) {
                 const q = questions[n - 1];
@@ -3151,18 +3271,48 @@
                 const dropPct = viewed ? ((dropOff / viewed) * 100).toFixed(1) : "0.0";
                 const med = dwellByQ[n] ? fmtMs(median(dwellByQ[n])) : "—";
                 const dropClass = parseFloat(dropPct) > 30 ? 'admin-warn' : (parseFloat(dropPct) > 15 ? 'admin-caution' : '');
+                const reachNum = parseFloat(reachPct);
+                const barColor = reachNum > 50 ? '#2BC76A' : (reachNum > 20 ? '#FFB800' : '#FF6B6B');
                 funnelRows.push(`
                     <tr>
                         <td><strong>Q${n}</strong></td>
                         <td class="admin-q-text">${(q && q.text || "").replace(/</g, "&lt;").slice(0, 80)}</td>
-                        <td>${viewed}</td>
+                        <td><div class="admin-funnel-bar" style="--w:${reachNum}%; --c:${barColor};">
+                                <span class="admin-funnel-bar-label">${viewed} (${reachPct}%)</span>
+                            </div></td>
                         <td>${answered}</td>
-                        <td>${reachPct}%</td>
                         <td class="${dropClass}">${dropOff} (${dropPct}%)</td>
                         <td>${med}</td>
                     </tr>
                 `);
             }
+
+            const funnelSummaryHtml = `
+                <div class="admin-funnel-summary">
+                    <div class="admin-funnel-summary-row">
+                        <div class="admin-funnel-stat">
+                            <div class="admin-funnel-stat-num">${firstQViews}</div>
+                            <div class="admin-funnel-stat-label">Started Quiz<br><small>(viewed Q1)</small></div>
+                        </div>
+                        <div class="admin-funnel-arrow">→</div>
+                        <div class="admin-funnel-stat">
+                            <div class="admin-funnel-stat-num">${lastQAnswered}</div>
+                            <div class="admin-funnel-stat-label">Completed<br><small>(answered Q${totalQs})</small></div>
+                        </div>
+                        <div class="admin-funnel-arrow">=</div>
+                        <div class="admin-funnel-stat admin-funnel-stat-hi">
+                            <div class="admin-funnel-stat-num">${overallCompletionPct}%</div>
+                            <div class="admin-funnel-stat-label">Completion Rate</div>
+                        </div>
+                    </div>
+                    ${worstDrops.length ? `
+                        <div class="admin-funnel-worst">
+                            <div class="admin-funnel-worst-label">⚠ Biggest leaks (where most visitors leave):</div>
+                            ${worstDrops.map(d => `<span class="admin-funnel-worst-pill">After Q${d.q} → lost ${d.lostHere} (${d.lostPct.toFixed(1)}%)</span>`).join(' ')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
 
             // Attribution by source
             const bySource = {};
@@ -3306,10 +3456,11 @@
                     <div class="admin-stat"><div class="admin-stat-num">${Math.round(medianScroll)}%</div><div class="admin-stat-label">Median Max Scroll</div><div class="admin-stat-sub">${scroll75} reached 75%+</div></div>
                 </div>
 
-                <h2>Quiz Funnel · Drop-off + Median Dwell</h2>
-                <p class="admin-note">Reach = % of visitors who got this far vs. Q1. Drop-off >30% = red, >15% = yellow.</p>
+                <h2>Quiz Funnel · Drop-off Visualization</h2>
+                ${funnelSummaryHtml}
+                <p class="admin-note">Each bar shows the % of starters who reached that question. Drop-off is on-question (viewed but didn't answer). Worst leaks at the top.</p>
                 <table class="admin-table">
-                    <thead><tr><th>#</th><th>Question</th><th>Viewed</th><th>Answered</th><th>Reach</th><th>Drop-off</th><th>Med. Dwell</th></tr></thead>
+                    <thead><tr><th>#</th><th>Question</th><th>Reach (unique visitors)</th><th>Answered</th><th>On-Q Drop-off</th><th>Med. Dwell</th></tr></thead>
                     <tbody>${funnelRows.join("")}</tbody>
                 </table>
 
