@@ -64,9 +64,9 @@ async function forwardToAppsScript(payload) {
 }
 
 // Flatten the lead into the shape GoHighLevel / Zapier / Make / most CRMs
-// expect: email + phone at top-level (GHL won't create a contact without
-// at least one of those), plus camelCase + snake_case duplicates for
-// flexibility, plus quiz answers as named custom fields.
+// expect: email + phone at top-level (GHL requires one), camelCase +
+// snake_case for both casings, plus every quiz answer as a named field,
+// plus computed quality / engagement signals for the agent.
 function buildWebhookPayload(payload) {
     const u  = payload.userData     || {};
     const ft = payload.first_touch  || {};
@@ -76,62 +76,129 @@ function buildWebhookPayload(payload) {
     const lastName  = u.lastName  || '';
     const fullName  = (firstName + ' ' + lastName).trim();
 
+    // Normalize phone to a clean format for tel: dialing
+    const phoneDigits = (u.phone || '').replace(/\D/g, '');
+    const phoneE164 = phoneDigits.length === 10 ? '+1' + phoneDigits
+                  : phoneDigits.length === 11 ? '+' + phoneDigits : '';
+
+    // Quiz answers, each in flat camelCase (no q-prefix)
+    const trucker_status    = payload.q1_trucker_status    || '';
+    const monthly_finances  = payload.q2_monthly_finances  || '';
+    const biggest_fear      = payload.q3_biggest_fear      || '';
+    const looking_for       = payload.q4_looking_for       || '';
+    const health_conditions = payload.q5_health_conditions || '';
+    const call_preference   = payload.q10_call_preference  || '';
+    const monthly_budget    = payload.q12_monthly_budget   || '';
+
+    // ─── Computed quality signals — agents call best leads first ───
+    const savesConsistently = /save consistently/i.test(monthly_finances);
+    const isHealthy         = /^no/i.test(health_conditions);
+    const isOTR             = /OTR/i.test(trucker_status);
+    const wantsAlivePay     = /pays me while.*ALIVE/i.test(looking_for);
+
+    // Budget tier (high/mid/low) — drives lead price
+    let budget_tier = 'unknown';
+    if (/\$800|\$600 - \$800/.test(monthly_budget)) budget_tier = 'high';
+    else if (/\$400 - \$600/.test(monthly_budget))  budget_tier = 'mid';
+    else if (/\$200 - \$400|Under \$200/.test(monthly_budget)) budget_tier = 'low';
+
+    // Composite score 0-100 — tune as you learn what actually closes
+    let lead_score = 50;
+    if (savesConsistently) lead_score += 15;
+    if (isHealthy)         lead_score += 10;
+    if (budget_tier === 'high') lead_score += 20;
+    else if (budget_tier === 'mid')  lead_score += 10;
+    else if (budget_tier === 'low')  lead_score -= 5;
+    if (isOTR)             lead_score += 5;
+    if (wantsAlivePay)     lead_score += 5;
+    lead_score = Math.max(0, Math.min(100, lead_score));
+    const lead_grade = lead_score >= 85 ? 'A' : lead_score >= 70 ? 'B'
+                    : lead_score >= 55 ? 'C' : 'D';
+
+    // Engagement metrics (off the page itself)
+    const timeOnPageSec = payload.time_to_complete_ms ? Math.round(payload.time_to_complete_ms / 1000) : null;
+    const activeSec     = payload.active_ms ? Math.round(payload.active_ms / 1000) : null;
+
+    // Rich notes block — agents see everything in one glance
+    const notesLines = [
+        'TRUCKER BENEFIT LEAD — Quality: ' + lead_grade + ' (' + lead_score + '/100)',
+        '────────────────────────────────────',
+        'DRIVER:      ' + (trucker_status    || '—'),
+        'HEALTH:      ' + (health_conditions || '—'),
+        'BUDGET:      ' + (monthly_budget    || '—') + '  [' + budget_tier + ' tier]',
+        'FINANCES:    ' + (monthly_finances  || '—'),
+        'BIGGEST FEAR:' + (biggest_fear      || '—'),
+        'LOOKING FOR: ' + (looking_for       || '—'),
+        'PREFERS:     ' + (call_preference   || '—'),
+        '────────────────────────────────────',
+        'AGE: ' + (u.age || '?') + '  |  STATE: ' + (u.state || '?'),
+        'SOURCE: ' + (payload.source || '—') + '  |  CAMPAIGN: ' + (ft.utm_campaign || '—'),
+        'TIME ON PAGE: ' + (timeOnPageSec ? timeOnPageSec + 's' : '?') + '  |  ACTIVE: ' + (activeSec ? activeSec + 's' : '?'),
+        'SUBMITTED:   ' + (payload.proxy_received_at || new Date().toISOString())
+    ];
+
     return {
-        // ─── Differentiation fields (GHL requires email or phone) ───
+        // ─── Differentiation (GHL requires one of these) ───
         email: u.email || '',
         phone: u.phone || '',
+        phone_digits: phoneDigits,
+        phone_e164:   phoneE164,
 
-        // ─── Standard contact fields, both camelCase + snake_case ───
-        firstName: firstName,
-        first_name: firstName,
-        lastName: lastName,
-        last_name: lastName,
-        name: fullName,
-        full_name: fullName,
-        dateOfBirth: u.dob || '',
-        date_of_birth: u.dob || '',
-        state: u.state || '',
+        // ─── Contact identity (both casings) ───
+        firstName, first_name: firstName,
+        lastName,  last_name:  lastName,
+        name: fullName, full_name: fullName,
+        dateOfBirth: u.dob || '', date_of_birth: u.dob || '', dob: u.dob || '',
         age: u.age || null,
+        state: u.state || '',
+        country: 'US',
 
-        // ─── Quiz answers as flat custom fields (no q-prefix) ───
-        trucker_status:    payload.q1_trucker_status    || '',
-        monthly_finances:  payload.q2_monthly_finances  || '',
-        biggest_fear:      payload.q3_biggest_fear      || '',
-        looking_for:       payload.q4_looking_for       || '',
-        health_conditions: payload.q5_health_conditions || '',
-        call_preference:   payload.q10_call_preference  || '',
-        monthly_budget:    payload.q12_monthly_budget   || '',
+        // ─── Quiz answers (flat) ───
+        trucker_status, monthly_finances, biggest_fear, looking_for,
+        health_conditions, call_preference, monthly_budget,
 
-        // ─── Attribution ───
-        source:        payload.source         || '',
-        utm_source:    ft.utm_source          || '',
-        utm_medium:    ft.utm_medium          || '',
-        utm_campaign:  ft.utm_campaign        || '',
-        utm_content:   ft.utm_content         || '',
-        utm_term:      ft.utm_term            || '',
-        fbclid:        ft.fbclid              || '',
-        gclid:         ft.gclid               || '',
-        ttclid:        ft.ttclid              || '',
-        referrer:      ft.referrer            || '',
-        landing_path:  ft.landing_path        || '',
+        // ─── Computed quality signals ───
+        lead_score,
+        lead_grade,
+        budget_tier,
+        is_healthy:         isHealthy ? 'yes' : 'no',
+        is_otr:             isOTR ? 'yes' : 'no',
+        saves_consistently: savesConsistently ? 'yes' : 'no',
+
+        // ─── Attribution (full) ───
+        source:        payload.source || '',
+        utm_source:    ft.utm_source   || '',
+        utm_medium:    ft.utm_medium   || '',
+        utm_campaign:  ft.utm_campaign || '',
+        utm_content:   ft.utm_content  || '',
+        utm_term:      ft.utm_term     || '',
+        fbclid:        ft.fbclid       || '',
+        gclid:         ft.gclid        || '',
+        ttclid:        ft.ttclid       || '',
+        referrer:      ft.referrer     || '',
+        landing_path:  ft.landing_path || '',
+        device:        payload.device  || ft.device || '',
+
+        // ─── Engagement signals ───
+        time_on_page_seconds: timeOnPageSec,
+        active_seconds:       activeSec,
+        scroll_pct:           payload.scroll_pct || 0,
 
         // ─── TCPA / consent ───
-        tcpa_consent_accepted:   tc.accepted ? 'yes' : 'no',
-        tcpa_consent_timestamp:  tc.ts || '',
-        trustedform_cert_url:    payload.trustedform_cert_url || '',
+        tcpa_consent_accepted:  tc.accepted ? 'yes' : 'no',
+        tcpa_consent_timestamp: tc.ts   || '',
+        tcpa_consent_text:      tc.text || '',
+        trustedform_cert_url:   payload.trustedform_cert_url || '',
 
-        // ─── Operator notes (free-text, agent-facing) ───
-        notes: 'Trucker Benefit assessment lead. Driver: ' + (payload.q1_trucker_status || '?') +
-               ' | Health: ' + (payload.q5_health_conditions || '?') +
-               ' | Budget: ' + (payload.q12_monthly_budget || '?') +
-               ' | Wants: ' + (payload.q10_call_preference || '?'),
+        // ─── Notes (agent-facing summary) ───
+        notes: notesLines.join('\n'),
 
         // ─── Server context ───
-        ip:           payload.proxy_ip           || '',
-        user_agent:   payload.proxy_user_agent   || '',
-        received_at:  payload.proxy_received_at  || new Date().toISOString(),
-        visitor_id:   payload.visitor || '',
-        session_id:   payload.session || ''
+        ip:          payload.proxy_ip          || '',
+        user_agent:  payload.proxy_user_agent  || '',
+        received_at: payload.proxy_received_at || new Date().toISOString(),
+        visitor_id:  payload.visitor || '',
+        session_id:  payload.session || ''
     };
 }
 
