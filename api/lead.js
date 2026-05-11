@@ -309,7 +309,7 @@ module.exports = async function handler(req, res) {
 
     // Defensive: a few sources are reserved for internal smoke tests and
     // should never reach external systems even if accidentally fired in a loop.
-    const HARD_BLOCKED_SOURCES = ['smoketest', 'deploy_check', 'webhook_proof', 'debug'];
+    const HARD_BLOCKED_SOURCES = ['smoketest', 'deploy_check', 'webhook_proof', 'debug', 'internal_test', 'diagnostic'];
     const isHardBlocked = HARD_BLOCKED_SOURCES.indexOf(payload.source) !== -1;
 
     // Phone is the differentiation field for every downstream system
