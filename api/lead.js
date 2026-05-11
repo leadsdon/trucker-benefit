@@ -119,22 +119,98 @@ function buildWebhookPayload(payload) {
     const timeOnPageSec = payload.time_to_complete_ms ? Math.round(payload.time_to_complete_ms / 1000) : null;
     const activeSec     = payload.active_ms ? Math.round(payload.active_ms / 1000) : null;
 
+    // ─── Natural-language bio (agent-facing) ───
+    // Builds a single paragraph summarizing who this lead is. Agents
+    // can read this in 10 seconds instead of decoding 7 field values.
+    function buildBio() {
+        const fn = firstName || 'This lead';
+        const ageStr = u.age ? u.age + '-year-old ' : '';
+        const stateStr = u.state ? ' from ' + u.state : '';
+
+        const driverDesc =
+            /OTR|long-haul/i.test(trucker_status) ? 'long-haul OTR truck driver' :
+            /local|regional/i.test(trucker_status) ? 'local/regional truck driver' :
+            /owner.?operator/i.test(trucker_status) ? 'owner-operator truck driver' :
+            /planning/i.test(trucker_status) ? 'aspiring truck driver' :
+            'truck driver';
+
+        let bio = fn + ' is a ' + ageStr + driverDesc + stateStr + '.';
+
+        // Financial state
+        if (savesConsistently) {
+            bio += ' They save consistently every month and have money set aside.';
+        } else if (/paycheck to paycheck/i.test(monthly_finances)) {
+            bio += ' They currently live paycheck to paycheck.';
+        } else if (/Sometimes I save/i.test(monthly_finances)) {
+            bio += ' They try to save but unexpected costs keep eating into it.';
+        } else if (/a little saved/i.test(monthly_finances)) {
+            bio += ' They have a little saved but not enough for emergencies.';
+        }
+
+        // Budget
+        if (monthly_budget) {
+            bio += ' Their monthly budget for financial protection is ' + monthly_budget + '.';
+        }
+
+        // Health
+        if (isHealthy) {
+            bio += ' Health-wise they are in good shape, with no major conditions in the last 5 years.';
+        } else if (/Yes|one or more/i.test(health_conditions)) {
+            bio += ' They have one or more major health conditions (heart disease, stroke, cancer, or diabetes) diagnosed in the last 5 years — underwriting will need to account for this.';
+        }
+
+        // Biggest fear (drop the "I feel..." stem for cleaner read)
+        if (biggest_fear) {
+            const fear = biggest_fear.replace(/^I /, '').replace(/\.+$/, '').trim();
+            bio += ' Their biggest financial fear is ' + fear.charAt(0).toLowerCase() + fear.slice(1) + '.';
+        }
+
+        // What they're looking for
+        if (looking_for) {
+            const wants = looking_for.replace(/^I /, '').replace(/\.+$/, '').trim();
+            bio += ' They are looking for ' + wants.charAt(0).toLowerCase() + wants.slice(1) + '.';
+        }
+
+        // Call preference
+        if (/Video/i.test(call_preference)) {
+            bio += ' They prefer a video call (Zoom or FaceTime) to walk through their plan.';
+        } else if (/Phone/i.test(call_preference)) {
+            bio += ' They prefer a phone call to walk through their plan.';
+        }
+
+        // Quality tag
+        bio += ' Lead grade: ' + lead_grade + ' (score ' + lead_score + '/100, ' + budget_tier + ' tier).';
+
+        return bio;
+    }
+    const bio = buildBio();
+
+    // Short one-line bio for SMS notifications / card displays
+    const bio_short = firstName + (u.lastName ? ' ' + u.lastName : '') +
+        ' (' + (u.age ? u.age + 'yo, ' : '') + (u.state || '') + ') · ' +
+        (trucker_status ? trucker_status.replace(/^Yes,\s*/, '') + ' · ' : '') +
+        (monthly_budget || 'budget unknown') + ' · ' +
+        'Grade ' + lead_grade;
+
     // Rich notes block — agents see everything in one glance
     const notesLines = [
         'TRUCKER BENEFIT LEAD — Quality: ' + lead_grade + ' (' + lead_score + '/100)',
-        '────────────────────────────────────',
-        'DRIVER:      ' + (trucker_status    || '—'),
-        'HEALTH:      ' + (health_conditions || '—'),
-        'BUDGET:      ' + (monthly_budget    || '—') + '  [' + budget_tier + ' tier]',
-        'FINANCES:    ' + (monthly_finances  || '—'),
-        'BIGGEST FEAR:' + (biggest_fear      || '—'),
-        'LOOKING FOR: ' + (looking_for       || '—'),
-        'PREFERS:     ' + (call_preference   || '—'),
-        '────────────────────────────────────',
+        '',
+        bio,
+        '',
+        '────── QUICK REFERENCE ──────',
+        'DRIVER:       ' + (trucker_status    || '—'),
+        'HEALTH:       ' + (health_conditions || '—'),
+        'BUDGET:       ' + (monthly_budget    || '—') + '  [' + budget_tier + ' tier]',
+        'FINANCES:     ' + (monthly_finances  || '—'),
+        'BIGGEST FEAR: ' + (biggest_fear      || '—'),
+        'LOOKING FOR:  ' + (looking_for       || '—'),
+        'PREFERS:      ' + (call_preference   || '—'),
+        '─────────────────────────────',
         'AGE: ' + (u.age || '?') + '  |  STATE: ' + (u.state || '?'),
         'SOURCE: ' + (payload.source || '—') + '  |  CAMPAIGN: ' + (ft.utm_campaign || '—'),
         'TIME ON PAGE: ' + (timeOnPageSec ? timeOnPageSec + 's' : '?') + '  |  ACTIVE: ' + (activeSec ? activeSec + 's' : '?'),
-        'SUBMITTED:   ' + (payload.proxy_received_at || new Date().toISOString())
+        'SUBMITTED:    ' + (payload.proxy_received_at || new Date().toISOString())
     ];
 
     return {
@@ -190,7 +266,9 @@ function buildWebhookPayload(payload) {
         tcpa_consent_text:      tc.text || '',
         trustedform_cert_url:   payload.trustedform_cert_url || '',
 
-        // ─── Notes (agent-facing summary) ───
+        // ─── Bio + Notes (agent-facing) ───
+        bio: bio,
+        bio_short: bio_short,
         notes: notesLines.join('\n'),
 
         // ─── Server context ───
