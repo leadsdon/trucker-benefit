@@ -2474,12 +2474,16 @@
             }
         }
 
-        // Best-effort partial-lead capture if user closes/refreshes mid-quiz.
+        // Capture session_end always so funnel analytics work, but ONLY save
+        // a partial-lead record if the user actually got past the phone step
+        // (10+ digit phone in userData). Without a phone the record is
+        // useless to the buyer — no contact channel — so we don't save it.
         window.addEventListener("beforeunload", () => {
             flushActiveTime();
             trackEvent("session_end", { active_ms: ACTIVE_MS, max_scroll: MAX_SCROLL_PCT });
             if (quizCompleted) return;
-            if (Object.keys(userData).length === 0) return;
+            const phoneDigits = (userData.phone || '').replace(/\D/g, '');
+            if (phoneDigits.length < 10) return;  // no callable phone → don't save
             saveLead({ status: "partial", userData, answers, lastQuestion: currentQuestion });
         });
 

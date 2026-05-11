@@ -328,6 +328,14 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({ ok: true, hard_blocked: true, source: payload.source });
     }
 
+    // Leads without a callable phone are useless — drop them entirely
+    // (don't even save to Supabase). Phone is the only contact channel
+    // that matters for selling these leads downstream.
+    if (isLead && !hasUsablePhone) {
+        console.log(`[api/lead] DROPPED — lead missing usable phone. visitor=${payload.visitor} firstName=${(payload.userData||{}).firstName}`);
+        return res.status(200).json({ ok: true, dropped: true, reason: 'missing_phone' });
+    }
+
     const writes = [writeToSupabase(enriched)];
 
     // Apps Script: always forwards events; only forwards leads if usable.
