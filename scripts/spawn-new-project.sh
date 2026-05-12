@@ -203,31 +203,92 @@ GITIGNORE
     echo "✅ Initialized git repo (main branch)"
 fi
 
+# ─── Optionally create + push a GitHub repo ──────────────────────────
+REPO_SLUG=$(echo "$FOLDER_NAME" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+REPO_URL=""
+
+echo
+read -rp "Create a private GitHub repo for this project + push? [Y/n]: " want_repo
+case "$want_repo" in
+    [nN]|[nN][oO])
+        echo "Skipping GitHub repo creation. You can run later:"
+        echo "  cd \"$PROJECT_DIR\""
+        echo "  gh repo create $REPO_SLUG --private --source=. --remote=origin --push"
+        ;;
+    *)
+        # 1. Ensure gh CLI exists (or offer to install)
+        if ! command -v gh >/dev/null 2>&1; then
+            echo "⚠ GitHub CLI (gh) not installed."
+            if command -v brew >/dev/null 2>&1; then
+                read -rp "Install via Homebrew now? [Y/n]: " do_install
+                case "$do_install" in
+                    [nN]|[nN][oO]) echo "Skipping. You can install later with: brew install gh"; SKIP_GH=1 ;;
+                    *) brew install gh ;;
+                esac
+            else
+                echo "Homebrew not found either. Install from: https://cli.github.com/"
+                SKIP_GH=1
+            fi
+        fi
+
+        # 2. Ensure gh is authenticated
+        if [ -z "$SKIP_GH" ] && command -v gh >/dev/null 2>&1; then
+            if ! gh auth status >/dev/null 2>&1; then
+                echo "⚠ gh not authenticated yet. Running 'gh auth login' — follow the prompts."
+                gh auth login || SKIP_GH=1
+            fi
+        fi
+
+        # 3. Make an initial commit so there's something to push
+        if [ -z "$SKIP_GH" ] && command -v gh >/dev/null 2>&1; then
+            if [ -z "$(git -C "$PROJECT_DIR" log --oneline 2>/dev/null)" ]; then
+                git -C "$PROJECT_DIR" add -A
+                git -C "$PROJECT_DIR" -c user.email="noreply@$(hostname)" \
+                  -c user.name="$BRAND bootstrap" \
+                  commit -q -m "Initial commit: project bootstrap for $BRAND ($PRODUCT for $DEMOGRAPHIC)" || true
+            fi
+
+            # 4. Create the repo and push (private by default)
+            echo "Creating private GitHub repo: $REPO_SLUG..."
+            if gh repo create "$REPO_SLUG" --private --source="$PROJECT_DIR" --remote=origin --push 2>&1; then
+                REPO_URL=$(gh repo view --json url -q .url 2>/dev/null || echo "")
+                echo "✅ GitHub repo created and pushed: $REPO_URL"
+            else
+                echo "❌ gh repo create failed. You can retry manually:"
+                echo "   cd \"$PROJECT_DIR\""
+                echo "   gh repo create $REPO_SLUG --private --source=. --remote=origin --push"
+            fi
+        fi
+        ;;
+esac
+
 # ─── Final instructions ──────────────────────────────────────────────
 cat <<NEXT
 
 ═════════════════════════════════════════════════════════════════
   ✅ PROJECT READY: $BRAND
 ═════════════════════════════════════════════════════════════════
+$(if [ -n "$REPO_URL" ]; then echo "  📦 GitHub:  $REPO_URL"; fi)
 
 Next steps (~30 seconds):
 
   1. cd "$PROJECT_DIR"
   2. claude
-  3. When Claude opens, paste the contents of INSTRUCTIONS.md:
+  3. Paste the contents of INSTRUCTIONS.md into Claude:
        cat INSTRUCTIONS.md | pbcopy
-     (then paste with Cmd+V in Claude's input box)
+     (then Cmd+V into Claude's input box)
 
   4. Answer Claude's discovery questions.
   5. Claude builds the entire system.
 
-After Claude finishes:
-  - Operator tasks (Vercel, Supabase, Meta, GHL) → see SETUP.md
-    that Claude will create
-  - Push to a new GitHub repo:
-       gh repo create ${FOLDER_NAME// /-} --private --source=. --remote=origin --push
-    (or do it manually via github.com/new)
-  - Connect Vercel to that repo for auto-deploy
+After Claude finishes the build:
+  - Run the operator tasks Claude lists in SETUP.md
+    (Vercel, Supabase, Meta Pixel + CAPI, GHL webhook)
+  $(if [ -n "$REPO_URL" ]; then
+      echo "- Connect Vercel to $REPO_URL for auto-deploy on git push"
+    else
+      echo "- Push to a new GitHub repo, then connect Vercel for auto-deploy"
+    fi)
 
 ═════════════════════════════════════════════════════════════════
 NEXT
