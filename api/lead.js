@@ -87,8 +87,7 @@ function buildWebhookPayload(payload) {
     const biggest_fear      = payload.q3_biggest_fear      || '';
     const looking_for       = payload.q4_looking_for       || '';
     const health_conditions = payload.q5_health_conditions || '';
-    const call_preference   = payload.q10_call_preference  || '';
-    const monthly_budget    = payload.q12_monthly_budget   || '';
+    const monthly_budget    = payload.q11_monthly_budget   || '';
 
     // ─── Computed quality signals — agents call best leads first ───
     const savesConsistently = /save consistently/i.test(monthly_finances);
@@ -171,13 +170,6 @@ function buildWebhookPayload(payload) {
             bio += ' They are looking for ' + wants.charAt(0).toLowerCase() + wants.slice(1) + '.';
         }
 
-        // Call preference
-        if (/Video/i.test(call_preference)) {
-            bio += ' They prefer a video call (Zoom or FaceTime) to walk through their plan.';
-        } else if (/Phone/i.test(call_preference)) {
-            bio += ' They prefer a phone call to walk through their plan.';
-        }
-
         // Quality tag
         bio += ' Lead grade: ' + lead_grade + ' (score ' + lead_score + '/100, ' + budget_tier + ' tier).';
 
@@ -205,7 +197,6 @@ function buildWebhookPayload(payload) {
         'FINANCES:     ' + (monthly_finances  || '—'),
         'BIGGEST FEAR: ' + (biggest_fear      || '—'),
         'LOOKING FOR:  ' + (looking_for       || '—'),
-        'PREFERS:      ' + (call_preference   || '—'),
         '─────────────────────────────',
         'AGE: ' + (u.age || '?') + '  |  STATE: ' + (u.state || '?'),
         'SOURCE: ' + (payload.source || '—') + '  |  CAMPAIGN: ' + (ft.utm_campaign || '—'),
@@ -231,7 +222,7 @@ function buildWebhookPayload(payload) {
 
         // ─── Quiz answers (flat) ───
         trucker_status, monthly_finances, biggest_fear, looking_for,
-        health_conditions, call_preference, monthly_budget,
+        health_conditions, monthly_budget,
 
         // ─── Computed quality signals ───
         lead_score,

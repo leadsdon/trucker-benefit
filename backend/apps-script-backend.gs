@@ -68,9 +68,8 @@ const CLIENT_COLUMNS = [
   "userData_state",
   "q1_trucker_status",
   "q2_monthly_finances",
-  "q12_monthly_budget",
+  "q11_monthly_budget",
   "q5_health_conditions",
-  "q10_call_preference",
   "q3_biggest_fear",
   "q4_looking_for",
   "notes"
@@ -86,9 +85,8 @@ const CLIENT_COLUMN_LABELS = {
   userData_state: "State",
   q1_trucker_status: "Driver Type",
   q2_monthly_finances: "Monthly Finances",
-  q12_monthly_budget: "Monthly Budget",
+  q11_monthly_budget: "Monthly Budget",
   q5_health_conditions: "Health Conditions",
-  q10_call_preference: "Call Preference",
   q3_biggest_fear: "Biggest Fear",
   q4_looking_for: "Looking For",
   notes: "Notes"
@@ -393,10 +391,9 @@ function pushToRingy(flat) {
     // Ringy custom fields — your client must create these in their Ringy
     // account (Lead Sources → Custom Fields) for them to show up on the lead.
     monthly_finances: flat.q2_monthly_finances || "",
-    monthly_budget: flat.q12_monthly_budget || "",
+    monthly_budget: flat.q11_monthly_budget || "",
     driver_type: flat.q1_trucker_status || "",
     health_conditions: flat.q5_health_conditions || "",
-    call_preference: flat.q10_call_preference || "",
     biggest_fear: flat.q3_biggest_fear || "",
     looking_for: flat.q4_looking_for || "",
     notes: LEAD_NOTES
