@@ -423,6 +423,7 @@ module.exports = async function handler(req, res) {
     }
 
     const capiIds = (payload && payload.capi_event_ids) || {};
+    const isComplete = payload.status === 'complete';
     let qualityCheck = null;
 
     // Don't fire CAPI for ANY test/internal source. These would otherwise
@@ -430,7 +431,13 @@ module.exports = async function handler(req, res) {
     const TEST_SOURCES = ['test', 'debug', 'smoketest', 'webhook_proof', 'webhook_flat_test', 'pre_launch', 'manual_backfill'];
     const isTestSource = TEST_SOURCES.indexOf(payload.source) !== -1;
 
-    if (isLead && capiIds.lead && !isTestSource && hasUsablePhone) {
+    // CAPI fires ONLY for fully-completed quizzes that pass every gate:
+    //   1. status === 'complete' (NOT partial bails captured on unload)
+    //   2. has capi_event_ids.lead (only generated in showResults())
+    //   3. source not in the test/internal list
+    //   4. phone is a real 10-digit number
+    //   5. lead-quality filter (real-looking email + phone) passes
+    if (isLead && isComplete && capiIds.lead && !isTestSource && hasUsablePhone) {
         qualityCheck = assessLeadQuality(payload);
         if (qualityCheck.ok) {
             writes.push(fireServerCapiForLead(enriched, capiIds, ip, req.headers['user-agent']));
@@ -440,6 +447,8 @@ module.exports = async function handler(req, res) {
             // submissions, which keeps your CPL accurate as you scale.
             console.log(`[api/lead] CAPI skipped — lead failed quality check: ${qualityCheck.reasons.join(', ')}`);
         }
+    } else if (isLead && capiIds.lead && !isComplete) {
+        console.log(`[api/lead] CAPI skipped — partial submission (status=${payload.status})`);
     } else if (isLead && capiIds.lead && isTestSource) {
         console.log(`[api/lead] CAPI skipped — test source: ${payload.source}`);
     } else if (leadMissingPhone) {
